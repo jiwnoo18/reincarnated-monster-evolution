@@ -437,7 +437,7 @@ function raceAbilityLevel(){return raceApplied?Math.min(5,Math.max(1,Math.floor(
 function scaledRaceStat(stat){const r=currentRace(),rank=raceAbilityLevel();return 1+(r[stat]-1)*rank;}
 function raceDamageMultiplier(){return scaledRaceStat('damage');}
 function showRaceAwakening(){if(raceApplied||raceChoicePending)return;raceChoicePending=true;document.exitPointerLock?.();document.getElementById('raceAwakening').classList.remove('hidden');document.getElementById('hint').textContent='RACE AWAKENING · Choose your bloodline';}
-function applySelectedRace(){if(raceApplied)return;raceApplied=true;raceChoicePending=false;const race=currentRace();playerMaxHealth=Math.round((100+(playerLevel-1)*8)*scaledRaceStat('health'));playerHealth=Math.min(playerMaxHealth,playerHealth+Math.round(playerMaxHealth*.2));player.walkSpeed=11;player.speed=player.walkSpeed*scaledRaceStat('speed');document.getElementById('raceAwakening').classList.add('hidden');document.getElementById('hint').textContent=race.name.toUpperCase()+' awakened · Ability Rank '+raceAbilityLevel();updateProgressUI();lock();}
+function applySelectedRace(){if(raceApplied||!raceChoicePending)return;raceApplied=true;raceChoicePending=false;const race=currentRace();raceButtons.forEach(button=>{button.disabled=true;button.classList.toggle('selected',button.dataset.race===selectedRace);});raceSummary.textContent='LOCKED: '+race.name.toUpperCase()+' is your permanent race for this run. It cannot be changed.';awakenButton.disabled=true;awakenButton.textContent=race.name.toUpperCase()+' AWAKENED · RACE LOCKED';playerMaxHealth=Math.round((100+(playerLevel-1)*8)*scaledRaceStat('health'));playerHealth=Math.min(playerMaxHealth,playerHealth+Math.round(playerMaxHealth*.2));player.walkSpeed=11;player.speed=player.walkSpeed*scaledRaceStat('speed');document.getElementById('raceAwakening').classList.add('hidden');document.getElementById('hint').textContent=race.name.toUpperCase()+' awakened · Race permanently locked · Ability Rank '+raceAbilityLevel();updateProgressUI();lock();}
 const monsters=[];
 const monsterTypes={
  slime:{name:'Slime',unlock:1,count:50,hp:35,damage:4,speed:2.1,xp:15,radius:.8,height:1.25,color:0x53e0a0},
@@ -541,8 +541,8 @@ function spawnSplash(lake,surfaceY,impactX,impactZ){
 let locked=false;const start=document.getElementById('start'),notice=document.getElementById('notice');
 function lock(){renderer.domElement.requestPointerLock?.();}
 const raceButtons=[...document.querySelectorAll('.race-choice')],raceSummary=document.getElementById('raceSummary'),awakenButton=document.getElementById('awakenRace');
-raceButtons.forEach(button=>button.addEventListener('click',()=>{selectedRace=button.dataset.race;raceButtons.forEach(item=>item.classList.toggle('selected',item===button));raceSummary.textContent=races[selectedRace].summary;awakenButton.disabled=false;awakenButton.textContent='AWAKEN AS '+races[selectedRace].name.toUpperCase();}));
-awakenButton.addEventListener('click',()=>{if(!raceChoicePending)return;applySelectedRace();});
+raceButtons.forEach(button=>button.addEventListener('click',()=>{if(raceApplied||!raceChoicePending)return;selectedRace=button.dataset.race;raceButtons.forEach(item=>item.classList.toggle('selected',item===button));raceSummary.textContent=races[selectedRace].summary+' This choice becomes permanent when you awaken.';awakenButton.disabled=false;awakenButton.textContent='LOCK IN '+races[selectedRace].name.toUpperCase();}));
+awakenButton.addEventListener('click',()=>{if(raceApplied||!raceChoicePending)return;applySelectedRace();});
 document.getElementById('play').addEventListener('click',()=>{start.classList.add('hidden');lock();});
 renderer.domElement.addEventListener('click',()=>{if(start.classList.contains('hidden')&&!locked)lock();});
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===renderer.domElement;notice.style.opacity=locked?'0':'1';});
