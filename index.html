@@ -37,12 +37,12 @@ try {
 const modelLoader = GLTFLoader ? new GLTFLoader() : null;
 // Poly Haven publishes free CC0 assets. Ask its file API for the current
 // downloadable glTF URL rather than hard-coding a possibly stale file path.
-async function loadPolyHavenModel(assetId) {
+async function loadPolyHavenModel(assetId,preferredResolution='2k') {
   if (!modelLoader) throw new Error('GLTFLoader unavailable');
   const response = await fetch('https://api.polyhaven.com/files/' + encodeURIComponent(assetId));
   if (!response.ok) throw new Error('Poly Haven API returned ' + response.status + ' for ' + assetId);
   const files = await response.json();
-  const modelFile = files?.gltf?.['2k']?.gltf || files?.gltf?.['1k']?.gltf || files?.gltf?.['4k']?.gltf;
+  const modelFile = files?.gltf?.[preferredResolution]?.gltf || files?.gltf?.['1k']?.gltf || files?.gltf?.['2k']?.gltf || files?.gltf?.['4k']?.gltf;
   if (!modelFile?.url) throw new Error('No downloadable glTF model found for ' + assetId);
   return await modelLoader.loadAsync(modelFile.url);
 }
@@ -95,7 +95,8 @@ for(const lake of lakes){
 // Distant mountain ranges: irregular ridgelines, layered foothills and rocky peaks.
 const mountainMat=[mat(0x718e91),mat(0x849fa0),mat(0x607d80),mat(0x526d70)];
 const rockFaceMat=[mat(0x6e7d78),mat(0x89958a),mat(0x596b68)];
-const mountainZones=[];
+const mountainZones=[],mountainPlacements=[],mountainFallbackGroup=new THREE.Group();
+scene.add(mountainFallbackGroup);
 for(let ring=0;ring<4;ring++){
  const count=34+ring*4;
  for(let i=0;i<count;i++){
@@ -106,17 +107,39 @@ for(let ring=0;ring<4;ring++){
   const mountainX=Math.cos(a)*r,mountainZ=Math.sin(a)*r;
   mountainZones.push({x:mountainX,z:mountainZ,r:width*.82,outer:width*1.55});
   const mountainBaseY=terrainY(mountainX,mountainZ);
+  mountainPlacements.push({x:mountainX,z:mountainZ,h,width,baseY:mountainBaseY,rotation:i*.71});
   const geo=new THREE.ConeGeometry(width,h,7,3);
   const mesh=new THREE.Mesh(geo,mountainMat[(i+ring)%mountainMat.length]);
   // ConeGeometry is centered on its origin: seat its bottom on the sampled terrain.
   mesh.position.set(mountainX,mountainBaseY+h/2,mountainZ);
-  mesh.rotation.y=i*.71;mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);
+  mesh.rotation.y=i*.71;mesh.castShadow=true;mesh.receiveShadow=true;mountainFallbackGroup.add(mesh);
   // Seat the smaller rock spur on its own terrain height too.
   const spurX=Math.cos(a)*(r-18),spurZ=Math.sin(a)*(r-18),spurH=h*.48;
   const spurBaseY=terrainY(spurX,spurZ);
   const spur=new THREE.Mesh(new THREE.ConeGeometry(width*.78,spurH,6),rockFaceMat[(i+ring)%rockFaceMat.length]);
-  spur.position.set(spurX,spurBaseY+spurH/2,spurZ);spur.rotation.y=i*.39;spur.castShadow=true;spur.receiveShadow=true;scene.add(spur);
+  spur.position.set(spurX,spurBaseY+spurH/2,spurZ);spur.rotation.y=i*.39;spur.castShadow=true;spur.receiveShadow=true;mountainFallbackGroup.add(spur);
  }
+}
+// Load a real CC0 rocky cliff model for the mountain range. The 1K asset
+// keeps download size reasonable; cones remain as a fallback if the CDN is unavailable.
+if(modelLoader){
+ loadPolyHavenModel('mountainside','1k').then((gltf)=>{
+  const source=gltf.scene;source.updateMatrixWorld(true);
+  const bounds=new THREE.Box3().setFromObject(source),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
+  if(!Number.isFinite(size.y)||size.y<=0)throw new Error('Mountainside model has invalid dimensions');
+  mountainFallbackGroup.clear();
+  for(let i=0;i<mountainPlacements.length;i++){
+   const p=mountainPlacements[i],model=source.clone(true);
+   // Normalize the model to each peak's footprint and height.
+   const sx=(p.width*2.05)/Math.max(size.x,.01),sy=p.h/Math.max(size.y,.01),sz=(p.width*2.05)/Math.max(size.z,.01);
+   model.scale.set(sx,sy,sz);
+   model.position.set(p.x-center.x*sx,terrainY(p.x,p.z)-bounds.min.y*sy,p.z-center.z*sz);
+   model.rotation.y=p.rotation;
+   model.traverse(node=>{if(node.isMesh){node.castShadow=false;node.receiveShadow=true;}});
+   mountainFallbackGroup.add(model);
+  }
+  console.info('ECLIPSE: loaded Poly Haven Mountainside cliff model:',mountainPlacements.length);
+ }).catch(error=>console.warn('Poly Haven mountain model failed; keeping fallback peaks.',error));
 }
 const trunkMat=mat(0x60402a),leafMats=[mat(0x245a38),mat(0x2d7042),mat(0x397f47),mat(0x4c8a49)];
 const treeGroup=new THREE.Group();scene.add(treeGroup);
