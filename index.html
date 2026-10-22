@@ -93,13 +93,17 @@ for(let ring=0;ring<4;ring++){
   const width=58+ring*13+Math.sin(i*3.2)*14;
   const mountainX=Math.cos(a)*r,mountainZ=Math.sin(a)*r;
   mountainZones.push({x:mountainX,z:mountainZ,r:width*.7,outer:width*1.55});
+  const mountainBaseY=terrainY(mountainX,mountainZ);
   const geo=new THREE.ConeGeometry(width,h,7,3);
   const mesh=new THREE.Mesh(geo,mountainMat[(i+ring)%mountainMat.length]);
-  mesh.position.set(Math.cos(a)*r,h*.47-5,Math.sin(a)*r);
-  mesh.rotation.y=i*.71;mesh.rotation.z=Math.sin(i*4.3)*.09;mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);
-  // Broken rock spurs at the foot of each mountain help the range blend into the hills.
-  const spur=new THREE.Mesh(new THREE.ConeGeometry(width*.78,h*.48,6),rockFaceMat[(i+ring)%rockFaceMat.length]);
-  spur.position.set(Math.cos(a)*(r-18),h*.22-4,Math.sin(a)*(r-18));spur.rotation.y=i*.39;spur.castShadow=true;scene.add(spur);
+  // ConeGeometry is centered on its origin: seat its bottom on the sampled terrain.
+  mesh.position.set(mountainX,mountainBaseY+h/2,mountainZ);
+  mesh.rotation.y=i*.71;mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);
+  // Seat the smaller rock spur on its own terrain height too.
+  const spurX=Math.cos(a)*(r-18),spurZ=Math.sin(a)*(r-18),spurH=h*.48;
+  const spurBaseY=terrainY(spurX,spurZ);
+  const spur=new THREE.Mesh(new THREE.ConeGeometry(width*.78,spurH,6),rockFaceMat[(i+ring)%rockFaceMat.length]);
+  spur.position.set(spurX,spurBaseY+spurH/2,spurZ);spur.rotation.y=i*.39;spur.castShadow=true;spur.receiveShadow=true;scene.add(spur);
  }
 }
 const trunkMat=mat(0x60402a),leafMats=[mat(0x245a38),mat(0x2d7042),mat(0x397f47),mat(0x4c8a49)];
