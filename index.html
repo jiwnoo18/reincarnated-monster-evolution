@@ -51,6 +51,42 @@ scene.background=new THREE.Color(0x91d0ee);
 scene.fog=new THREE.FogExp2(0x91d0ee,0.00085);
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,6000);
 camera.rotation.order='YXZ';
+scene.add(camera);
+// First-person arms and hands, mounted to the camera so they stay visible while looking around.
+const firstPersonHands=new THREE.Group();
+camera.add(firstPersonHands);
+const sleeveMat=new THREE.MeshStandardMaterial({color:0x202b35,roughness:.88});
+const cuffMat=new THREE.MeshStandardMaterial({color:0x9a7745,metalness:.25,roughness:.6});
+const skinMat=new THREE.MeshStandardMaterial({color:0xc98d67,roughness:.82});
+const handDetailMat=new THREE.MeshStandardMaterial({color:0xb97855,roughness:.9});
+function makeLimbBetween(group,a,b,radius,material,roundness=5){
+ const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start);
+ const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(radius,Math.max(.02,delta.length()-radius*2),4,roundness),material);
+ mesh.position.copy(start).add(end).multiplyScalar(.5);
+ mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
+ mesh.frustumCulled=false;
+ group.add(mesh);
+ return mesh;
+}
+function makeFirstPersonArm(side){
+ const g=new THREE.Group();
+ const s=side;
+ // Forearm sleeve, leather cuff, palm and four clearly visible fingers.
+ makeLimbBetween(g,[s*.72,-.92,-1.22],[s*.43,-.66,-.88],.115,sleeveMat);
+ makeLimbBetween(g,[s*.45,-.68,-.91],[s*.40,-.62,-.84],.12,cuffMat);
+ const palm=new THREE.Mesh(new THREE.BoxGeometry(.19,.19,.105),skinMat);
+ palm.position.set(s*.385,-.565,-.79);palm.rotation.z=s*-.16;g.add(palm);
+ // Fingers point slightly forward and downward from the palm.
+ for(let i=0;i<4;i++){
+  const x=s*(.315+i*.045);
+  makeLimbBetween(g,[x,-.625,-.775],[x+s*.012,-.70,-.745],.027,skinMat,4);
+ }
+ makeLimbBetween(g,[s*.30,-.56,-.79],[s*.265,-.61,-.755],.032,handDetailMat,4);
+ firstPersonHands.add(g);
+ return g;
+}
+const leftFirstPersonArm=makeFirstPersonArm(-1);
+const rightFirstPersonArm=makeFirstPersonArm(1);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;document.body.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xd7f4ff,0x49633d,2.0));
