@@ -56,7 +56,7 @@ document.addEventListener('mousemove',e=>{if(!locked)return;player.yaw-=e.moveme
 const keys=new Set();document.addEventListener('keydown',e=>{if(['KeyW','KeyA','KeyS','KeyD'].includes(e.code)){keys.add(e.code);e.preventDefault();}});document.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',()=>keys.clear());
 let prev=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-prev)/1000,.05);prev=now;
 const forward=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),side=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);let dx=0,dz=0;const mag=Math.hypot(forward,side)||1;
-if(forward||side){dx=(Math.sin(player.yaw)*forward+Math.cos(player.yaw)*side)/mag;dz=(-Math.cos(player.yaw)*forward+Math.sin(player.yaw)*side)/mag;player.x+=dx*player.speed*dt;player.z+=dz*player.speed*dt;}
+if(forward||side){dx=(-Math.sin(player.yaw)*forward+Math.cos(player.yaw)*side)/mag;dz=(-Math.cos(player.yaw)*forward-Math.sin(player.yaw)*side)/mag;player.x+=dx*player.speed*dt;player.z+=dz*player.speed*dt;}
 player.y=terrainY(player.x,player.z);camera.position.set(player.x,player.y+2.15,player.z);camera.rotation.set(player.pitch,player.yaw,0);renderer.render(scene,camera);}
 requestAnimationFrame(animate);
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));});
