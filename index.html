@@ -40,7 +40,7 @@ body:before{content:"";position:fixed;inset:-30%;z-index:1;pointer-events:none;o
  <div id="statPanel" aria-label="Character stat upgrades"><div class="stat-head"><b>CHARACTER UPGRADES</b><span>POINTS <strong id="statPoints">0</strong></span></div><div class="stat-note" id="statNote">Level up to earn 1 upgrade point</div><div class="stat-options"><button class="stat-upgrade" data-stat="strength"><b>＋ STRENGTH</b><small id="strengthStat">Damage +0%</small></button><button class="stat-upgrade" data-stat="health"><b>＋ HEALTH</b><small id="healthStat">Max HP +0</small></button><button class="stat-upgrade" data-stat="stamina"><b>＋ STAMINA</b><small id="staminaStat">Move speed +0%</small></button><button class="stat-upgrade hidden-stat" data-stat="mana" id="manaUpgrade"><b>＋ MANA</b><small id="manaStat">Ability damage +0%</small></button></div></div>
  <div id="coinCounter" aria-live="polite">🪙 COINS <b id="coinValue">0</b></div>
  <div id="ammoCounter" aria-live="polite">ARROWS <b id="ammoValue">10 / 10</b></div>
- <div class="ability-bar" id="abilityBar" aria-label="Race abilities"><div class="ability-slot"><span class="ability-key">1</span><b>LOCKED</b><small>Reach Level 5</small></div><div class="ability-slot"><span class="ability-key">2</span><b>LOCKED</b><small>Reach Level 10</small></div><div class="ability-slot"><span class="ability-key">3</span><b>LOCKED</b><small>Reach Level 10</small></div><div class="ability-slot"><span class="ability-key">4</span><b>LOCKED</b><small>Reach Level 10</small></div><div class="ability-slot"><span class="ability-key">5</span><b>LOCKED</b><small>Reach Level 10</small></div></div>
+ <div class="ability-bar" id="abilityBar" aria-label="Race abilities"><div class="ability-slot"><span class="ability-key">1</span><b>LOCKED</b><small>Reach Level 5</small></div><div class="ability-slot"><span class="ability-key">2</span><b>LOCKED</b><small>Reach Level 5</small></div><div class="ability-slot"><span class="ability-key">3</span><b>LOCKED</b><small>Reach Level 5</small></div><div class="ability-slot"><span class="ability-key">4</span><b>LOCKED</b><small>Reach Level 5</small></div><div class="ability-slot"><span class="ability-key">5</span><b>LOCKED</b><small>Reach Level 5</small></div></div>
  <div id="bottomStatus" aria-live="polite">
   <div class="bottom-level"><span id="bottomLevelTitle">LEVEL 1</span><span id="bottomXPText">0 / 145 XP</span></div>
   <div class="bottom-bar-label"><span>HP</span><b id="bottomHPText">100 / 100</b></div>
@@ -572,7 +572,7 @@ createVillage();
  const trunkGeo=new THREE.CylinderGeometry(.22,.34,3.8,7),leafGeo=new THREE.ConeGeometry(2.25,5.2,7);
  const trunkMat=new THREE.MeshStandardMaterial({color:0x60452e,roughness:1});
  const leafMats=[0x245b43,0x34724b,0x3d8050].map(color=>new THREE.MeshStandardMaterial({color,roughness:1}));
- const trunks=new THREE.InstancedMesh(trunkGeo,trunkMat,360),canopies=leafMats.map(m=>new THREE.InstancedMesh(leafGeo,m,120));
+ const trunks=new THREE.InstancedMesh(trunkGeo,trunkMat,360),canopies=leafMats.map(m=>new THREE.InstancedMesh(leafGeo,m,360));
  const dummy=new THREE.Object3D();let count=0,leafCounts=[0,0,0];
  for(let i=0;i<360;i++){
   const x=100+Math.random()*440,z=-270+Math.random()*650;
