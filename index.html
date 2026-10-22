@@ -20,8 +20,8 @@
 
 /* Visual polish: cinematic atmosphere, soft edge vignette and subtle animated sun haze. */
 html,body{background:#91c9a1}
-body:after{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,transparent 42%,rgba(9,30,27,.09) 76%,rgba(5,20,25,.28) 120%);box-shadow:inset 0 0 100px rgba(8,35,30,.16)}
-body:before{content:"";position:fixed;inset:-30%;z-index:1;pointer-events:none;opacity:.16;background:linear-gradient(112deg,transparent 35%,rgba(255,244,198,.12) 46%,transparent 57%);transform:translateX(-12%);animation:sunHazeDrift 22s ease-in-out infinite alternate}
+body:after{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,transparent 55%,rgba(9,30,27,.035) 82%,rgba(5,20,25,.10) 120%)}
+body:before{content:"";position:fixed;inset:-30%;z-index:1;pointer-events:none;opacity:.06;background:linear-gradient(112deg,transparent 35%,rgba(255,255,255,.10) 46%,transparent 57%);transform:translateX(-12%);animation:sunHazeDrift 22s ease-in-out infinite alternate}
 @keyframes sunHazeDrift{from{transform:translateX(-12%) rotate(-4deg)}to{transform:translateX(12%) rotate(4deg)}}
 #minimap,#levelPanel,#statPanel,#coinCounter,#ammoCounter,.weapon-slot,.ability-slot,#bottomStatus{box-shadow:0 8px 28px rgba(0,15,18,.38),inset 0 1px rgba(255,255,255,.06)}
 #bottomStatus{border-color:#bfffee88}
@@ -90,7 +90,7 @@ async function loadPolyHavenModel(assetId,preferredResolution='2k') {
 }
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x91d0ee);
-scene.fog=new THREE.FogExp2(0x91d0ee,0.00085);
+scene.fog=new THREE.FogExp2(0x91d0ee,0.00032);
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,6000);
 camera.rotation.order='YXZ';
 scene.add(camera);
@@ -273,7 +273,7 @@ function attackCurrentWeapon(){
 function castWeaponAbility(key){const weapon=["fists","katana","bow"][activeWeaponSlot-1],def=weaponAbilityDefs[weapon][key];if(!ownedWeaponAbilities[weapon][key]){hintEl.textContent="Buy "+def.name+" for "+weapon.toUpperCase()+" in the village shop";return;}if(key==="E"&&weapon!=="fists"&&(ownedWeaponRanks[weapon]||0)<2){hintEl.textContent="Upgrade "+weapon.toUpperCase()+" to Rare rank to use "+def.name;return;}if(weaponAbilityCooldowns[key]>0){hintEl.textContent=def.name+" recharging · "+weaponAbilityCooldowns[key].toFixed(1)+"s";return;}const upgrades=weaponUpgradeMultiplier(weapon),damage=weaponBaseDamage[weapon]*upgrades*def.mult*(1+playerLevel*.025);spawnAbilityFX(def.color,def.kind,def.range);if(weapon==="bow"){tryHitMonsters(damage*(key==="E"?1.25:1),def.range,key==="E" ? 0.08 : -0.05);}else if(key==="Q"){for(const m of monsters){if(m.dead)continue;const d=Math.hypot(m.mesh.position.x-player.x,m.mesh.position.z-player.z);if(d<=def.range+m.radius)damageMonster(m,damage*raceDamageMultiplier()*statDamageMultiplier());}}else{tryHitMonsters(damage,def.range,.12);}weaponAbilityCooldowns[key]=def.cooldown;updateWeaponAbilityUI();hintEl.textContent=def.name+"! · "+weapon.toUpperCase()+" · "+Math.round(damage)+" power";}
 
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;document.body.appendChild(renderer.domElement);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2.25));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;document.body.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xd7f4ff,0x49633d,2.0));
 const sun=new THREE.DirectionalLight(0xfff1d0,3.2);sun.position.set(-90,150,65);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-100;sun.shadow.camera.right=100;sun.shadow.camera.top=100;sun.shadow.camera.bottom=-100;scene.add(sun);
 function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,roughness})}
@@ -587,7 +587,39 @@ function spawnMonster(type,tierOverride=false){const spec=monsterTypes[type];if(
 const villageNPCs=[];
 function addVillageLabel(textValue,color=0xffffff){const c=document.createElement('canvas');c.width=512;c.height=96;const ctx=c.getContext('2d');ctx.font='bold 34px system-ui';ctx.textAlign='center';ctx.fillStyle='rgba(10,18,25,.78)';ctx.fillRect(4,8,504,80);ctx.strokeStyle='#d5c18b';ctx.lineWidth=3;ctx.strokeRect(4,8,504,80);ctx.fillStyle='#'+color.toString(16).padStart(6,'0');ctx.fillText(textValue,256,60);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));sprite.scale.set(5.8,1.1,1);return sprite;}
 function villageBox(parent,geo,material,x,y,z,sx=1,sy=1,sz=1){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
-function buildVillageNPC(name,role,x,z,shirtColor,action){const g=new THREE.Group(),skin=new THREE.MeshStandardMaterial({color:0xc98d67,roughness:.9}),shirt=new THREE.MeshStandardMaterial({color:shirtColor,roughness:.9}),dark=new THREE.MeshStandardMaterial({color:0x34313a,roughness:1});villageBox(g,new THREE.CapsuleGeometry(.35,.62,4,7),shirt,0,1.05,0);villageBox(g,new THREE.SphereGeometry(.29,12,10),skin,0,1.75,0);villageBox(g,new THREE.ConeGeometry(.35,.55,8),dark,0,2.12,0);for(const side of [-1,1]){villageBox(g,new THREE.CapsuleGeometry(.105,.55,3,6),shirt,side*.43,1.1,0);villageBox(g,new THREE.CapsuleGeometry(.12,.48,3,6),dark,side*.2,.34,0);}g.position.set(x,terrainY(x,z),z);scene.add(g);const label=addVillageLabel(name,0xffe5a3);label.position.set(0,2.65,0);g.add(label);villageNPCs.push({name,role,x,z,action,mesh:g});}
+function buildVillageNPC(name,role,x,z,shirtColor,action){
+ const g=new THREE.Group();
+ const skin=new THREE.MeshStandardMaterial({color:0xc98d67,roughness:.72});
+ const shirt=new THREE.MeshStandardMaterial({color:shirtColor,roughness:.76});
+ const dark=new THREE.MeshStandardMaterial({color:0x292b32,roughness:.82});
+ const hair=new THREE.MeshStandardMaterial({color:role==='elder'?0xc7c9c7:role==='healer'?0x49304b:0x34251e,roughness:.9});
+ const trim=new THREE.MeshStandardMaterial({color:role==='shop'?0xc59a4b:role==='healer'?0x8fe5db:0xe1c88b,metalness:.18,roughness:.5});
+ villageBox(g,new THREE.CapsuleGeometry(.34,.68,6,10),shirt,0,1.08,0);
+ villageBox(g,new THREE.SphereGeometry(.29,20,16),skin,0,1.82,0);
+ villageBox(g,new THREE.SphereGeometry(.30,16,10),hair,0,2.02,-.035,1,.52,1);
+ villageBox(g,new THREE.ConeGeometry(.37,.48,10),role==='shop'?dark:hair,0,2.23,0);
+ for(const side of [-1,1]){
+  villageBox(g,new THREE.CapsuleGeometry(.105,.58,5,8),shirt,side*.42,1.13,0);
+  villageBox(g,new THREE.CapsuleGeometry(.115,.48,5,8),dark,side*.19,.34,0);
+  const eye=new THREE.MeshStandardMaterial({color:0x241c18,roughness:.6});
+  villageBox(g,new THREE.SphereGeometry(.035,8,6),eye,side*.105,1.85,-.266);
+ }
+ villageBox(g,new THREE.BoxGeometry(.42,.09,.04),trim,0,1.28,-.342);
+ if(role==='shop'){
+  villageBox(g,new THREE.BoxGeometry(.42,.48,.12),trim,0,1.62,-.31);
+  villageBox(g,new THREE.BoxGeometry(.12,.62,.12),dark,.39,1.38,-.02);
+ }else if(role==='elder'){
+  villageBox(g,new THREE.CapsuleGeometry(.045,.62,4,6),trim,.38,.67,-.02);
+  villageBox(g,new THREE.SphereGeometry(.09,10,8),trim,.38,1.02,-.02);
+ }else if(role==='healer'){
+  villageBox(g,new THREE.SphereGeometry(.13,12,10),trim,0,1.57,-.39);
+  villageBox(g,new THREE.BoxGeometry(.045,.28,.045),shirt,0,1.57,-.51);
+  villageBox(g,new THREE.BoxGeometry(.22,.045,.045),shirt,0,1.57,-.51);
+ }
+ g.position.set(x,terrainY(x,z),z);scene.add(g);
+ const label=addVillageLabel(name,0xffe5a3);label.position.set(0,2.85,0);g.add(label);
+ villageNPCs.push({name,role,x,z,action,mesh:g});
+}
 function createVillage(){const cx=0,cz=-52;const wood=new THREE.MeshStandardMaterial({color:0x765039,roughness:1}),plaster=new THREE.MeshStandardMaterial({color:0xe4d2a6,roughness:1}),roof=new THREE.MeshStandardMaterial({color:0x843f31,roughness:1}),stone=new THREE.MeshStandardMaterial({color:0x8b918c,roughness:1}),road=new THREE.MeshStandardMaterial({color:0xb7a17a,roughness:1});const square=new THREE.Mesh(new THREE.CylinderGeometry(17,18,.28,12),road);square.position.set(cx,terrainY(cx,cz)+.05,cz);square.receiveShadow=true;scene.add(square);function hut(x,z,w,d,roofColor=roof){const g=new THREE.Group();villageBox(g,new THREE.BoxGeometry(w,3.3,d),plaster,0,1.65,0);villageBox(g,new THREE.BoxGeometry(w+.8,.35,d+.8),wood,0,.2,0);const r=villageBox(g,new THREE.ConeGeometry(Math.max(w,d)*.78,2.6,4),roofColor,0,4.3,0);r.rotation.y=Math.PI/4;villageBox(g,new THREE.BoxGeometry(w*.22,1.65,.12),wood,0,.85,-d/2-.07);g.position.set(x,terrainY(x,z),z);scene.add(g);}hut(-13,-61,7,6);hut(13,-61,7,6);hut(-13,-43,6,6);hut(13,-43,7,6);hut(0,-70,8,6,new THREE.MeshStandardMaterial({color:0x425a76,roughness:1}));for(let i=0;i<4;i++){const post=new THREE.Mesh(new THREE.CylinderGeometry(.12,.16,3,6),wood);post.position.set(-5+i*3,terrainY(-5+i*3,-52)+1.5,-52);scene.add(post);}const sign=new THREE.Group();villageBox(sign,new THREE.BoxGeometry(3.6,1.2,.18),wood,0,2.6,0);const signLabel=addVillageLabel('MOONHOLLOW',0xfff0c6);signLabel.scale.set(4.3,.8,1);signLabel.position.set(0,2.65,.13);sign.add(signLabel);villageBox(sign,new THREE.CylinderGeometry(.13,.16,3.2,6),wood,0,.8,0);sign.position.set(0,terrainY(0,-78),-78);scene.add(sign);buildVillageNPC('BLACKSMITH · F','shop',-4,-52,0x6b7f91,openVillageShop);buildVillageNPC('ELDER · F','elder',4,-52,0x6b8d62,elderInteraction);buildVillageNPC('HEALER · F','healer',0,-63,0x8d6cb1,()=>{const healed=playerMaxHealth-playerHealth;if(healed<=0){hintEl.textContent='Healer: Your health is already full.';return;}const cost=Math.max(10,Math.ceil(healed*.35));if(playerCoins<cost){hintEl.textContent='Healer: You need '+cost+' coins for a full heal.';return;}playerCoins-=cost;playerHealth=playerMaxHealth;updateShopUI();updateProgressUI();hintEl.textContent='Healer restored your health for '+cost+' coins.';});}
 createVillage();
 // Moonlight Forest: instanced trees and undergrowth for a richer, efficient landscape.
@@ -797,7 +829,7 @@ if(gameStarted&&!bossFightActive){spawnClock+=dt;if(spawnClock>=4.5){spawnClock=
 if(!player.onGround){player.jumpY+=player.verticalSpeed*dt;player.verticalSpeed-=22*dt;if(player.jumpY<=0){player.jumpY=0;player.verticalSpeed=0;player.onGround=true;}}
 player.y=terrainY(player.x,player.z);avatar.position.set(player.x,player.y+player.jumpY,player.z);avatar.rotation.y=player.yaw;camera.position.set(player.x,player.y+1.62+player.jumpY,player.z);camera.rotation.set(player.pitch,player.yaw,0,'YXZ');
 let activeLake=null;for(const entry of lakeSurfaces){const l=entry.lake,dxLake=(player.x-l.x)/1.13,dzLake=(player.z-l.z)/.82;if(Math.hypot(dxLake,dzLake)<l.r*.92&&camera.position.y<entry.y+.65){activeLake=entry;break;}}
-const nowUnderwater=!!activeLake;if(nowUnderwater&&!underwater)spawnSplash(activeLake.lake,activeLake.y,player.x,player.z);underwater=nowUnderwater;underwaterOverlay.style.opacity=underwater?'1':'0';scene.fog.color.copy(baseFogColor).lerp(underwaterFogColor,underwater?.88:0);scene.fog.density=underwater?.018:.00085;
+const nowUnderwater=!!activeLake;if(nowUnderwater&&!underwater)spawnSplash(activeLake.lake,activeLake.y,player.x,player.z);underwater=nowUnderwater;underwaterOverlay.style.opacity=underwater?'1':'0';scene.fog.color.copy(baseFogColor).lerp(underwaterFogColor,underwater?.88:0);scene.fog.density=underwater?.018:.00032;
 for(let i=splashParticles.length-1;i>=0;i--){const p=splashParticles[i];p.life-=dt;p.mesh.position.x+=p.vx*dt;p.mesh.position.y+=p.vy*dt;p.mesh.position.z+=p.vz*dt;p.vy-=12*dt;p.mesh.material.opacity=Math.max(0,p.life/p.maxLife);if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose();splashParticles.splice(i,1);}}
 updateFlyingArrows(dt);updateAbilityEffects(dt);
 for(let i=splashRings.length-1;i>=0;i--){const p=splashRings[i];p.life-=dt;const age=1-p.life/.8;p.mesh.scale.setScalar(1+age*8);p.mesh.material.opacity=Math.max(0,p.life);if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose();splashRings.splice(i,1);}}
