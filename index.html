@@ -11,7 +11,8 @@
 <body>
 <div id="hud">
  <div class="brand"><strong>REINCARNATED</strong><span>MONSTER EVOLUTION · PROLOGUE</span></div>
- <div class="hint" id="hint">Explore your new world · No enemies, just discovery</div>\n <div id="minimap"><div class="maplabel">WORLD MAP</div><canvas id="mapCanvas" width="160" height="160"></canvas></div>
+ <div class="hint" id="hint">Explore your new world · No enemies, just discovery</div>
+ <div id="minimap"><div class="maplabel">WORLD MAP</div><canvas id="mapCanvas" width="160" height="160"></canvas></div>
  <div class="crosshair"></div>
  <div class="panel"><b>MOVE</b><br><span class="key">W</span> Forward &nbsp; <span class="key">S</span> Back<br><span class="key">A</span> Left &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="key">D</span> Right<br><b>JUMP</b> · <span class="key">SPACE</span><br><b>LOOK</b> · Move mouse<br><b>ESC</b> · Release mouse</div>
  <div class="bottomright">EARLY ACCESS · MOVEMENT TEST<br>Fantasy wilderness · Chapter 01</div>
@@ -39,7 +40,8 @@ const water=new THREE.Mesh(new THREE.PlaneGeometry(1000,1000),new THREE.MeshStan
 const mountainMat=[mat(0x718e91),mat(0x849fa0),mat(0x607d80)];
 for(let ring=0;ring<3;ring++){for(let i=0;i<24;i++){const a=i/24*Math.PI*2+(ring%2)*.08,r=180+ring*55+Math.sin(i*8.7+ring)*25,h=35+((i*17+ring*13)%47);const geo=new THREE.ConeGeometry(25+ring*7,h,7);const mesh=new THREE.Mesh(geo,mountainMat[(i+ring)%3]);mesh.position.set(Math.cos(a)*r,h/2-3,Math.sin(a)*r);mesh.rotation.y=i*.71;scene.add(mesh);}}
 const trunkMat=mat(0x69452d),leafMats=[mat(0x2d7046),mat(0x367f4b),mat(0x438e4e),mat(0x548f4b)];
-const treeGroup=new THREE.Group();scene.add(treeGroup);\nconst mapTrees=[];const mapRocks=[];
+const treeGroup=new THREE.Group();scene.add(treeGroup);
+const mapTrees=[];const mapRocks=[];
 function tree(x,z,s=1){const groundY=terrainY(x,z);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22*s,.38*s,3.8*s,7),trunkMat);trunk.position.set(x,groundY+1.9*s,z);trunk.castShadow=true;treeGroup.add(trunk);for(let j=0;j<3;j++){const crown=new THREE.Mesh(new THREE.ConeGeometry((2.0-j*.35)*s,3.3*s,7),leafMats[Math.floor(Math.abs(Math.sin(x*13+z*7+j))*leafMats.length)]);crown.position.set(x,groundY+(3.6+j*1.35)*s,z);crown.castShadow=true;treeGroup.add(crown);}}
 function terrainY(x,z){return (Math.sin(x*.018)*2.5+Math.cos(z*.021)*2+Math.sin((x+z)*.012)*3.5)*Math.max(0,1-Math.hypot(x,z)/95)+Math.sin(x*.055+z*.027)*.22;}
 let seed=8347;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
