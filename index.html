@@ -28,6 +28,12 @@ try {
 } catch (firstError) {
   THREE = await import('https://unpkg.com/three@0.164.1/build/three.module.js');
 }
+let GLTFLoader;
+try {
+  ({ GLTFLoader } = await import('https://esm.sh/three@0.164.1/examples/jsm/loaders/GLTFLoader.js'));
+} catch (loaderError) {
+  console.warn('Realistic tree model loader unavailable; keeping fallback trees.', loaderError);
+}
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x91d0ee);
 scene.fog=new THREE.FogExp2(0x91d0ee,0.00085);
@@ -116,6 +122,36 @@ for(let i=0;i<520;i++){
  const a=rand()*Math.PI*2,r=32+Math.sqrt(rand())*1030,x=Math.cos(a)*r,z=Math.sin(a)*r;
  if(lakes.some(l=>Math.hypot(x-l.x,z-l.z)<l.r*1.5))continue;
  tree(x,z,.7+rand()*.95);mapTrees.push({x,z});
+}
+// Replace part of the procedural forest with the real, textured Poly Haven tree.
+// Keep a smaller procedural forest as a fast-loading fallback while the model downloads.
+if(GLTFLoader){
+ const treeModelURL='https://dl.polyhaven.org/file/ph-assets/Models/gltf/2k/tree_small_02/tree_small_02_2k.gltf';
+ new GLTFLoader().load(treeModelURL,(gltf)=>{
+  const source=gltf.scene;
+  source.updateMatrixWorld(true);
+  const bounds=new THREE.Box3().setFromObject(source);
+  const size=bounds.getSize(new THREE.Vector3());
+  const center=bounds.getCenter(new THREE.Vector3());
+  if(!Number.isFinite(size.y)||size.y<=0) return;
+  treeGroup.clear();
+  const realisticCount=Math.min(135,mapTrees.length);
+  for(let i=0;i<mapTrees.length;i++){
+   const p=mapTrees[i];
+   if(i<realisticCount){
+    const model=source.clone(true);
+    const scale=(7.5+(i%5)*.35)/size.y;
+    model.scale.setScalar(scale);
+    model.position.set(p.x-center.x*scale,terrainY(p.x,p.z)-bounds.min.y*scale,p.z-center.z*scale);
+    model.rotation.y=(i*2.3999632297)%(Math.PI*2);
+    model.traverse((node)=>{if(node.isMesh){node.castShadow=false;node.receiveShadow=true;}});
+    treeGroup.add(model);
+   }else if(i<realisticCount+230){
+    tree(p.x,p.z,.55+((i*17)%45)/100);
+   }
+  }
+  console.info('ECLIPSE: loaded Poly Haven Tree Small 02; realistic trees:',realisticCount);
+ },undefined,(error)=>console.warn('Poly Haven tree download failed; using procedural forest.',error));
 }
 const rockMat=mat(0x78877b);for(let i=0;i<260;i++){
  const a=rand()*Math.PI*2,r=22+Math.sqrt(rand())*970,x=Math.cos(a)*r,z=Math.sin(a)*r;
