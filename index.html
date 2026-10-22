@@ -26,6 +26,23 @@ body:before{content:"";position:fixed;inset:-30%;z-index:1;pointer-events:none;o
 #minimap,#levelPanel,#statPanel,#coinCounter,#ammoCounter,.weapon-slot,.ability-slot,#bottomStatus{box-shadow:0 8px 28px rgba(0,15,18,.38),inset 0 1px rgba(255,255,255,.06)}
 #bottomStatus{border-color:#bfffee88}
 @media(prefers-reduced-motion:reduce){body:before,#underwaterOverlay:before{animation:none}}
+
+/* Keep both ability bars together in the bottom-right HUD corner. */
+.weapon-ability-bar{
+ left:auto!important;right:18px;bottom:104px;transform:none!important;
+ justify-content:flex-end;max-width:min(460px,calc(100vw - 24px));
+}
+.ability-bar{
+ left:auto!important;right:18px;bottom:18px;transform:none!important;
+ justify-content:flex-end;max-width:min(460px,calc(100vw - 24px));
+}
+@media(max-width:600px){
+ .weapon-ability-bar{right:10px;bottom:180px;max-width:calc(100vw - 20px);gap:4px}
+ .weapon-ability-slot{width:calc((100vw - 32px)/2);padding:6px 5px;font-size:9px}
+ .ability-bar{right:10px;bottom:100px;max-width:calc(100vw - 20px);gap:4px}
+ .ability-slot{width:calc((100vw - 36px)/5);padding:6px 2px;font-size:9px}
+}
+
 </style>
 </head>
 <body>
