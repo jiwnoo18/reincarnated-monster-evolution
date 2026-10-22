@@ -313,6 +313,14 @@ function terrainY(x,z){
   const d=Math.hypot(x-lake.x,z-lake.z), edge=lake.r*1.42;
   if(d<edge){const t=1-d/edge;y-=9*t*t*(3-2*t);}
  }
+ // Moonlight Village gets a level central plaza and gently blended outskirts.
+ const villageDistance=Math.hypot(x,z+52), villageRadius=34;
+ if(villageDistance<villageRadius){
+  const villageLevel=baseTerrainY(0,-52);
+  const t=THREE.MathUtils.clamp(villageDistance/villageRadius,0,1);
+  const blend=t*t*(3-2*t);
+  y=villageLevel+(y-villageLevel)*blend;
+ }
  return y;
 }
 const groundGeo=new THREE.PlaneGeometry(4000,4000,320,320);groundGeo.rotateX(-Math.PI/2);const pos=groundGeo.attributes.position;
@@ -698,12 +706,12 @@ dragonborn:[['Dragon Claw','🐉',0xff692e],['Flame Cone','🔥',0xf4a13b],['Met
 human:[['Weapon Breaker','⚔️',0x70e6ff],['Shockwave','💫',0x86f7d7],['Arcane Shot','🎯',0x9eeeff],['Battle Focus','💚',0x8fffc7],['Limit Break','⭐',0xffe78a]]
 };
 const abilityCooldowns=[0,0,0,0,0],abilityFx=[];let abilityShield=0;
-function updateAbilityUI(){const bar=document.getElementById('abilityBar');if(!bar)return;const defs=raceApplied&&raceAbilityLevel()>0?abilityNames[selectedRace]:null;[...bar.children].forEach((el,i)=>{const name=el.querySelector('b'),small=el.querySelector('small');if(!defs){name.textContent='LOCKED';small.textContent=!raceApplied?'Reach Level 5':'Defeat a boss to unlock';el.classList.remove('cooling');return;}name.textContent=defs[i][0].toUpperCase();small.textContent=abilityCooldowns[i]>0?abilityCooldowns[i].toFixed(1)+'s':['SHORT RANGE','MID RANGE','HIGH RANGE','HEALING','ULTIMATE'][i]+' · R'+raceAbilityLevel();el.style.borderColor='#'+defs[i][2].toString(16).padStart(6,'0');el.classList.toggle('cooling',abilityCooldowns[i]>0);});}
+function updateAbilityUI(){const bar=document.getElementById('abilityBar');if(!bar)return;const defs=raceApplied?abilityNames[selectedRace]:null;const rank=raceAbilityLevel();[...bar.children].forEach((el,i)=>{const name=el.querySelector('b'),small=el.querySelector('small');if(!defs||rank<i+1){name.textContent='LOCKED';small.textContent=!raceApplied?'Reach Level 10 and awaken a race':'Defeat a boss to unlock ability '+(i+1);el.classList.remove('cooling');el.style.borderColor='';return;}name.textContent=defs[i][0].toUpperCase();small.textContent=abilityCooldowns[i]>0?abilityCooldowns[i].toFixed(1)+'s':['SHORT RANGE','MID RANGE','HIGH RANGE','HEALING','ULTIMATE'][i]+' · R'+rank;el.style.borderColor='#'+defs[i][2].toString(16).padStart(6,'0');el.classList.toggle('cooling',abilityCooldowns[i]>0);});}
 function spawnAbilityFX(color,kind='burst',radius=4){const c=new THREE.Color(color),g=new THREE.Group();g.position.set(player.x,player.y+.12+player.jumpY,player.z);scene.add(g);const material=new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.95,wireframe:kind==='burst'});const geo=kind==='beam'?new THREE.CylinderGeometry(.12,radius*.3,Math.max(2,radius*1.8),10,1,true):kind==='ring'?new THREE.TorusGeometry(.8,.12,8,32):new THREE.IcosahedronGeometry(.65,1);const mesh=new THREE.Mesh(geo,material);if(kind==='beam'){mesh.rotation.x=Math.PI/2;mesh.position.y=1.1;}else if(kind==='ring'){mesh.rotation.x=Math.PI/2;mesh.position.y=.2;}else mesh.position.y=1.2;g.add(mesh);for(let i=0;i<14;i++){const p=new THREE.Mesh(new THREE.SphereGeometry(.07+Math.random()*.09,5,4),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.95}));const a=Math.random()*Math.PI*2,d=.4+Math.random()*1.5;p.position.set(Math.cos(a)*d,.3+Math.random()*1.7,Math.sin(a)*d);p.userData={vx:Math.cos(a)*(2+Math.random()*3),vy:1+Math.random()*3,vz:Math.sin(a)*(2+Math.random()*3)};g.add(p);}abilityFx.push({group:g,mesh,life:.85,maxLife:.85,radius,kind});}
 function abilityAreaDamage(damage,range,color,kind='ring'){spawnAbilityFX(color,kind,range);let hits=0;for(const m of monsters){if(m.dead)continue;const d=Math.hypot(m.mesh.position.x-player.x,m.mesh.position.z-player.z);if(d<=range+m.radius){damageMonster(m,damage*raceDamageMultiplier()*statDamageMultiplier());hits++;}}return hits;}
 function castAbility(slot){
  if(!raceApplied){hintEl.textContent='Reach Level 5 and awaken a race first';return;}
- if(raceAbilityLevel()<=0){hintEl.textContent='Defeat a world boss to unlock your race abilities';return;}
+ if(raceAbilityLevel()<slot){hintEl.textContent='Defeat a world boss to unlock race ability '+slot+' · Your next available ability is '+(raceAbilityLevel()+1);return;}
  if(abilityCooldowns[slot-1]>0){hintEl.textContent=abilityNames[selectedRace][slot-1][0]+' recharging · '+abilityCooldowns[slot-1].toFixed(1)+'s';return;}
  const rank=raceAbilityLevel(),scale=1+(rank-1)*.28,defs=abilityNames[selectedRace]||abilityNames.human,color=defs[slot-1][2];
  const damage=(22+playerLevel*1.8)*scale*statAbilityMultiplier();
