@@ -225,7 +225,7 @@ if(modelLoader){
  }).catch(error=>console.warn('Poly Haven rock model failed; keeping procedural rocks.',error));
 }
 const flowerColors=[0xffe7a1,0xffb8d1,0xe2c6ff,0xffffff];for(let i=0;i<420;i++){const a=rand()*Math.PI*2,r=5+Math.sqrt(rand())*75,x=Math.cos(a)*r,z=Math.sin(a)*r;if(lakes.some(l=>Math.hypot(x-l.x,z-l.z)<l.r*1.1))continue;const f=new THREE.Mesh(new THREE.SphereGeometry(.13,6,5),new THREE.MeshStandardMaterial({color:flowerColors[i%4],emissive:flowerColors[i%4],emissiveIntensity:.08}));f.position.set(x,terrainY(x,z)+.3+rand()*.15,z);scene.add(f);}
-const player={x:0,y:0,z:8,yaw:0,pitch:-.08,speed:5.2,walkSpeed:5.2,runSpeed:5.2,jumpY:0,verticalSpeed:0,onGround:true};camera.position.set(player.x,2.4,player.z);
+const player={x:0,y:0,z:8,yaw:0,pitch:-.08,speed:11,walkSpeed:11,jumpY:0,verticalSpeed:0,onGround:true};camera.position.set(player.x,2.4,player.z);
 const underwaterOverlay=document.getElementById('underwaterOverlay');
 const baseFogColor=new THREE.Color(0x91d0ee),underwaterFogColor=new THREE.Color(0x075ca8);let underwater=false,waterTime=0;
 const splashParticles=[];const splashRings=[];
