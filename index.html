@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Reincarnated: Monster Evolution</title>
 <style>
-:root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#8cc9e8;font-family:Inter,system-ui,Segoe UI,sans-serif;color:#fff}canvas{display:block}#hud{position:fixed;inset:0;pointer-events:none;z-index:2}#underwaterOverlay{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .22s ease;background:radial-gradient(ellipse at center,rgba(32,157,218,.28) 0%,rgba(0,91,178,.58) 68%,rgba(0,38,103,.86) 100%);mix-blend-mode:screen}#underwaterOverlay:before{content:'';position:absolute;inset:-20%;background:repeating-radial-gradient(ellipse at 48% 45%,transparent 0 70px,rgba(155,232,255,.08) 72px 75px,transparent 78px 135px);animation:waterCaustics 7s linear infinite}#underwaterOverlay:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,74,154,.22),rgba(0,34,104,.48));} @keyframes waterCaustics{from{transform:translate3d(-2%,1%,0) rotate(0deg)}to{transform:translate3d(2%,-1%,0) rotate(8deg)}}.brand{position:absolute;top:20px;left:22px;text-shadow:0 2px 12px #1238;z-index:2}#minimap{position:absolute;top:92px;left:18px;width:176px;padding:7px;border:1px solid #d8ffff88;border-radius:13px;background:#092b2bd9;box-shadow:0 8px 28px #001b2766;backdrop-filter:blur(8px)}#minimap .maplabel{font-size:10px;letter-spacing:.16em;font-weight:800;margin:0 0 5px 3px;color:#d9ffff}#mapCanvas{width:160px;height:160px;border-radius:50%;display:block;border:1px solid #d8ffff77;background:#244b38}.brand strong{display:block;font-size:clamp(18px,3vw,27px);letter-spacing:.04em}.brand span{font-size:11px;letter-spacing:.2em;color:#e1f6ff}.panel{position:absolute;left:20px;bottom:20px;background:#092b2bb8;border:1px solid #d8ffff55;border-radius:13px;padding:12px 15px;backdrop-filter:blur(10px);font-size:12px;line-height:1.9}.key{display:inline-grid;place-items:center;min-width:23px;height:22px;margin-right:4px;padding:0 5px;border:1px solid #ffffff70;border-radius:5px;background:#ffffff19;font-weight:700}.hint{position:absolute;left:50%;top:20px;transform:translateX(-50%);background:#082b2b9c;border:1px solid #ffffff44;border-radius:20px;padding:9px 14px;font-size:12px;white-space:nowrap;text-align:center}.weapon-slots{position:absolute;top:20px;right:20px;display:flex;gap:9px;pointer-events:auto}.weapon-slot{width:76px;height:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid #d8ffff66;border-radius:12px;background:linear-gradient(155deg,#123b3bdc,#071c24e8);box-shadow:0 7px 20px #00121d55;backdrop-filter:blur(9px);color:#eaffff;font:700 10px/1 system-ui,sans-serif;letter-spacing:.08em;cursor:pointer;transition:transform .12s,border-color .12s,background .12s}.weapon-slot .weapon-icon{font-size:24px;line-height:1;text-shadow:0 0 12px #7cf7e477}.weapon-slot .weapon-key{font-size:9px;color:#9ac8ca;letter-spacing:.16em}.weapon-slot.active{border:2px solid #83f4d0;background:linear-gradient(155deg,#1a6660ed,#0b3439f5);box-shadow:0 0 0 2px #54dfba22,0 0 22px #54dfba35;transform:translateY(1px)}.weapon-slot.active .weapon-key{color:#c4ffe9}@media(max-width:600px){.weapon-slots{top:72px;right:10px;gap:5px}.weapon-slot{width:53px;height:59px;border-radius:9px;gap:4px}.weapon-slot .weapon-icon{font-size:19px}.weapon-slot .weapon-name{font-size:8px}.weapon-slot .weapon-key{font-size:8px}}.crosshair{position:absolute;left:50%;top:50%;width:5px;height:5px;background:#fff;border-radius:50%;box-shadow:0 0 7px #123;opacity:.75}.bottomright{position:absolute;right:20px;bottom:20px;text-align:right;font-size:11px;color:#efffffcc;text-shadow:0 2px 8px #123}.start{pointer-events:auto;position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(#052d3855,#06201c77);transition:opacity .25s}.start.hidden{opacity:0;pointer-events:none}.card{width:min(460px,calc(100vw - 32px));padding:30px;border:1px solid #d8ffff65;border-radius:22px;background:#092b2bdb;box-shadow:0 20px 80px #001b27a6;text-align:center;backdrop-filter:blur(18px)}.orb{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:radial-gradient(circle at 32% 25%,#e3ffff,#62e9d0 30%,#159f9a 66%,#095a67);box-shadow:0 0 38px #4effd566,inset -9px -10px 15px #003e5870}.card h1{font-size:clamp(24px,5vw,34px);line-height:1.1;margin:0 0 9px}.card p{color:#c6e8e7;font-size:13px;line-height:1.7}.startbtn{border:0;border-radius:10px;background:linear-gradient(120deg,#79f0ce,#a9e8ff);color:#063b3a;font-weight:800;font-size:14px;padding:13px 24px;cursor:pointer;margin-top:9px}.startbtn:hover{filter:brightness(1.08)}#notice{position:absolute;left:50%;bottom:105px;transform:translateX(-50%);font-size:12px;background:#06292bbb;padding:8px 13px;border-radius:9px;opacity:0;transition:opacity .2s}@media(max-width:600px){#minimap{top:78px;left:10px;width:126px;padding:5px}#minimap .maplabel{font-size:9px}#mapCanvas{width:114px;height:114px}.hint{top:auto;bottom:145px;font-size:10px}.panel{left:10px;bottom:10px;padding:8px 10px}.bottomright{right:10px;bottom:10px}.brand{left:12px;top:12px}}
+:root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#8cc9e8;font-family:Inter,system-ui,Segoe UI,sans-serif;color:#fff}canvas{display:block}#hud{position:fixed;inset:0;pointer-events:none;z-index:2}#underwaterOverlay{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .22s ease;background:radial-gradient(ellipse at center,rgba(32,157,218,.28) 0%,rgba(0,91,178,.58) 68%,rgba(0,38,103,.86) 100%);mix-blend-mode:screen}#underwaterOverlay:before{content:'';position:absolute;inset:-20%;background:repeating-radial-gradient(ellipse at 48% 45%,transparent 0 70px,rgba(155,232,255,.08) 72px 75px,transparent 78px 135px);animation:waterCaustics 7s linear infinite}#underwaterOverlay:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,74,154,.22),rgba(0,34,104,.48));} @keyframes waterCaustics{from{transform:translate3d(-2%,1%,0) rotate(0deg)}to{transform:translate3d(2%,-1%,0) rotate(8deg)}}.brand{position:absolute;top:20px;left:22px;text-shadow:0 2px 12px #1238;z-index:2}#minimap{position:absolute;top:92px;left:18px;width:176px;padding:7px;border:1px solid #d8ffff88;border-radius:13px;background:#092b2bd9;box-shadow:0 8px 28px #001b2766;backdrop-filter:blur(8px)}#minimap .maplabel{font-size:10px;letter-spacing:.16em;font-weight:800;margin:0 0 5px 3px;color:#d9ffff}#mapCanvas{width:160px;height:160px;border-radius:50%;display:block;border:1px solid #d8ffff77;background:#244b38}.brand strong{display:block;font-size:clamp(18px,3vw,27px);letter-spacing:.04em}.brand span{font-size:11px;letter-spacing:.2em;color:#e1f6ff}.panel{position:absolute;left:20px;bottom:20px;background:#092b2bb8;border:1px solid #d8ffff55;border-radius:13px;padding:12px 15px;backdrop-filter:blur(10px);font-size:12px;line-height:1.9}.key{display:inline-grid;place-items:center;min-width:23px;height:22px;margin-right:4px;padding:0 5px;border:1px solid #ffffff70;border-radius:5px;background:#ffffff19;font-weight:700}.hint{position:absolute;left:50%;top:20px;transform:translateX(-50%);background:#082b2b9c;border:1px solid #ffffff44;border-radius:20px;padding:9px 14px;font-size:12px;white-space:nowrap;text-align:center}.weapon-slots{position:absolute;top:20px;right:20px;display:flex;gap:9px;pointer-events:auto}.weapon-slot{width:76px;height:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid #d8ffff66;border-radius:12px;background:linear-gradient(155deg,#123b3bdc,#071c24e8);box-shadow:0 7px 20px #00121d55;backdrop-filter:blur(9px);color:#eaffff;font:700 10px/1 system-ui,sans-serif;letter-spacing:.08em;cursor:pointer;transition:transform .12s,border-color .12s,background .12s}.weapon-slot .weapon-icon{font-size:24px;line-height:1;text-shadow:0 0 12px #7cf7e477}.weapon-slot .weapon-key{font-size:9px;color:#9ac8ca;letter-spacing:.16em}.weapon-slot.active{border:2px solid #83f4d0;background:linear-gradient(155deg,#1a6660ed,#0b3439f5);box-shadow:0 0 0 2px #54dfba22,0 0 22px #54dfba35;transform:translateY(1px)}.weapon-slot.active .weapon-key{color:#c4ffe9}#ammoCounter{position:absolute;top:108px;right:20px;min-width:120px;padding:9px 12px;border:1px solid #d8ffff66;border-radius:10px;background:#092b2bdc;color:#d8ffff;font-size:10px;font-weight:800;letter-spacing:.12em;text-align:center;box-shadow:0 7px 20px #00121d55}#ammoCounter b{display:block;margin-top:3px;color:#83f4d0;font-size:18px;letter-spacing:.04em}#ammoCounter.empty b{color:#ff9c86}@media(max-width:600px){#ammoCounter{top:137px;right:10px;min-width:88px;padding:6px 8px;font-size:9px}#ammoCounter b{font-size:15px}}@media(max-width:600px){.weapon-slots{top:72px;right:10px;gap:5px}.weapon-slot{width:53px;height:59px;border-radius:9px;gap:4px}.weapon-slot .weapon-icon{font-size:19px}.weapon-slot .weapon-name{font-size:8px}.weapon-slot .weapon-key{font-size:8px}}.crosshair{position:absolute;left:50%;top:50%;width:5px;height:5px;background:#fff;border-radius:50%;box-shadow:0 0 7px #123;opacity:.75}.bottomright{position:absolute;right:20px;bottom:20px;text-align:right;font-size:11px;color:#efffffcc;text-shadow:0 2px 8px #123}.start{pointer-events:auto;position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(#052d3855,#06201c77);transition:opacity .25s}.start.hidden{opacity:0;pointer-events:none}.card{width:min(460px,calc(100vw - 32px));padding:30px;border:1px solid #d8ffff65;border-radius:22px;background:#092b2bdb;box-shadow:0 20px 80px #001b27a6;text-align:center;backdrop-filter:blur(18px)}.orb{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:radial-gradient(circle at 32% 25%,#e3ffff,#62e9d0 30%,#159f9a 66%,#095a67);box-shadow:0 0 38px #4effd566,inset -9px -10px 15px #003e5870}.card h1{font-size:clamp(24px,5vw,34px);line-height:1.1;margin:0 0 9px}.card p{color:#c6e8e7;font-size:13px;line-height:1.7}.startbtn{border:0;border-radius:10px;background:linear-gradient(120deg,#79f0ce,#a9e8ff);color:#063b3a;font-weight:800;font-size:14px;padding:13px 24px;cursor:pointer;margin-top:9px}.startbtn:hover{filter:brightness(1.08)}#notice{position:absolute;left:50%;bottom:105px;transform:translateX(-50%);font-size:12px;background:#06292bbb;padding:8px 13px;border-radius:9px;opacity:0;transition:opacity .2s}@media(max-width:600px){#minimap{top:78px;left:10px;width:126px;padding:5px}#minimap .maplabel{font-size:9px}#mapCanvas{width:114px;height:114px}.hint{top:auto;bottom:145px;font-size:10px}.panel{left:10px;bottom:10px;padding:8px 10px}.bottomright{right:10px;bottom:10px}.brand{left:12px;top:12px}}
 </style>
 </head>
 <body>
@@ -17,6 +17,7 @@
   <button class="weapon-slot" data-slot="2" aria-pressed="false" title="Select weapon slot 2"><span class="weapon-icon">⚔</span><span class="weapon-name">KATANA</span><span class="weapon-key">2</span></button>
   <button class="weapon-slot" data-slot="3" aria-pressed="false" title="Select bow in weapon slot 3"><span class="weapon-icon">➶</span><span class="weapon-name">BOW</span><span class="weapon-key">3</span></button>
  </div>
+ <div id="ammoCounter" aria-live="polite">ARROWS <b id="ammoValue">10 / 10</b></div>
  <div id="minimap"><div class="maplabel">WORLD MAP</div><canvas id="mapCanvas" width="160" height="160"></canvas></div>
  <div class="crosshair"></div>
  <div class="panel"><b>MOVE</b><br><span class="key">W</span> Forward &nbsp; <span class="key">S</span> Back<br><span class="key">A</span> Left &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="key">D</span> Right<br><b>JUMP</b> · <span class="key">SPACE</span><br><b>ATTACK</b> · <span class="key">E</span> / Left Click<br><b>LOOK</b> · Move mouse<br><b>ESC</b> · Release mouse</div>
@@ -162,6 +163,46 @@ bowGroup.visible=false;
 let bowSwing=0,bowSwingStart=0;
 let katanaSwing=0,katanaSwingStart=0;
 let fistPunch=0,fistPunchStart=0;
+const MAX_ARROWS=10;
+let arrowsRemaining=MAX_ARROWS;
+let bowFiredThisDraw=false;
+const flyingArrows=[];
+const ammoCounter=document.getElementById('ammoCounter');
+const ammoValue=document.getElementById('ammoValue');
+function updateAmmoUI(){
+ ammoValue.textContent=arrowsRemaining+' / '+MAX_ARROWS;
+ ammoCounter.classList.toggle('empty',arrowsRemaining===0);
+}
+function launchArrow(){
+ const direction=new THREE.Vector3();
+ camera.getWorldDirection(direction);
+ const startPosition=new THREE.Vector3();
+ camera.getWorldPosition(startPosition);
+ startPosition.addScaledVector(direction,.78);
+ const projectile=arrowGroup.clone(true);
+ projectile.position.copy(startPosition);
+ projectile.quaternion.copy(camera.quaternion);
+ projectile.scale.setScalar(.78);
+ scene.add(projectile);
+ const velocity=direction.multiplyScalar(72);
+ flyingArrows.push({mesh:projectile,velocity:velocity,life:3.5});
+}
+function updateFlyingArrows(dt){
+ for(let i=flyingArrows.length-1;i>=0;i--){
+  const p=flyingArrows[i];
+  p.life-=dt;
+  p.velocity.y-=8.5*dt;
+  p.mesh.position.addScaledVector(p.velocity,dt);
+  if(p.velocity.lengthSq()>0.001){
+   const aim=p.mesh.position.clone().add(p.velocity);
+   p.mesh.lookAt(aim);
+  }
+  if(p.life<=0||p.mesh.position.y<-.5||p.mesh.position.length()>5800){
+   scene.remove(p.mesh);
+   flyingArrows.splice(i,1);
+  }
+ }
+}
 function attackFist(){
  if(activeWeaponSlot!==1||fistPunch>0)return;
  fistPunch=.34;fistPunchStart=performance.now();
@@ -172,7 +213,15 @@ function attackKatana(){
 }
 function attackBow(){
  if(activeWeaponSlot!==3||bowSwing>0)return;
- bowSwing=.42;bowSwingStart=performance.now();
+ if(arrowsRemaining<=0){
+  const hint=document.getElementById('hint');
+  hint.textContent='Out of arrows · your 10-arrow supply is empty';
+  return;
+ }
+ arrowsRemaining--;
+ updateAmmoUI();
+ bowFiredThisDraw=false;
+ bowSwing=.62;bowSwingStart=performance.now();
 }
 function attackCurrentWeapon(){
  if(activeWeaponSlot===1)attackFist();
@@ -424,12 +473,19 @@ katanaGroup.visible=activeWeaponSlot===2;
 bowGroup.visible=activeWeaponSlot===3;
 if(katanaSwing>0){const progress=1-katanaSwing/.34;katanaSwing=Math.max(0,katanaSwing-dt);const arc=Math.sin(progress*Math.PI);katanaGroup.rotation.z=-.12+Math.sin(progress*Math.PI*2)*1.05;katanaGroup.rotation.x=-.15-arc*.45;katanaGroup.rotation.y=arc*.35;}else{katanaGroup.rotation.set(0,-0,-.12);}
 if(bowSwing>0){
- const progress=1-bowSwing/.42;bowSwing=Math.max(0,bowSwing-dt);
- const drawArc=Math.sin(progress*Math.PI);
- bowGroup.rotation.z=-.12-drawArc*.22;
- bowGroup.rotation.x=-.08+drawArc*.16;
+ const progress=1-bowSwing/.62;
+ bowSwing=Math.max(0,bowSwing-dt);
+ const drawArc=Math.sin(Math.min(progress/.72,1)*Math.PI*.5);
+ bowGroup.rotation.z=-.12-drawArc*.32;
+ bowGroup.rotation.x=-.08+drawArc*.20;
  bowGroup.position.z=-.80+drawArc*.12;
  arrowGroup.position.z=-.035+drawArc*.20;
+ // Release the arrow near the end of the draw, then recoil the bow.
+ if(progress>=.72&&!bowFiredThisDraw){
+  bowFiredThisDraw=true;
+  launchArrow();
+  bowGroup.rotation.z+=.16;
+ }
 }else{
  bowGroup.rotation.set(-.08,0,-.12);
  bowGroup.position.z=-.80;
@@ -462,6 +518,7 @@ player.y=terrainY(player.x,player.z);camera.position.set(player.x,player.y+2.15+
 let activeLake=null;for(const entry of lakeSurfaces){const l=entry.lake,dxLake=(player.x-l.x)/1.13,dzLake=(player.z-l.z)/.82;if(Math.hypot(dxLake,dzLake)<l.r*.92&&camera.position.y<entry.y+.65){activeLake=entry;break;}}
 const nowUnderwater=!!activeLake;if(nowUnderwater&&!underwater)spawnSplash(activeLake.lake,activeLake.y,player.x,player.z);underwater=nowUnderwater;underwaterOverlay.style.opacity=underwater?'1':'0';scene.fog.color.copy(baseFogColor).lerp(underwaterFogColor,underwater?.88:0);scene.fog.density=underwater?.018:.00085;
 for(let i=splashParticles.length-1;i>=0;i--){const p=splashParticles[i];p.life-=dt;p.mesh.position.x+=p.vx*dt;p.mesh.position.y+=p.vy*dt;p.mesh.position.z+=p.vz*dt;p.vy-=12*dt;p.mesh.material.opacity=Math.max(0,p.life/p.maxLife);if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose();splashParticles.splice(i,1);}}
+updateFlyingArrows(dt);
 for(let i=splashRings.length-1;i>=0;i--){const p=splashRings[i];p.life-=dt;const age=1-p.life/.8;p.mesh.scale.setScalar(1+age*8);p.mesh.material.opacity=Math.max(0,p.life);if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose();splashRings.splice(i,1);}}
 drawMap();renderer.render(scene,camera);}
 requestAnimationFrame(animate);
