@@ -150,7 +150,8 @@ if(GLTFLoader){
     model.rotation.y=(i*2.3999632297)%(Math.PI*2);
     model.traverse((node)=>{if(node.isMesh){node.castShadow=false;node.receiveShadow=true;}});
     treeGroup.add(model);
-   }else if(i<realisticCount+230){
+   }else{
+    // Keep every remaining forest position populated so collision data matches visible trees.
     tree(p.x,p.z,.55+((i*17)%45)/100);
    }
   }
