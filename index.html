@@ -834,6 +834,95 @@ for(let i=splashParticles.length-1;i>=0;i--){const p=splashParticles[i];p.life-=
 updateFlyingArrows(dt);updateAbilityEffects(dt);
 for(let i=splashRings.length-1;i>=0;i--){const p=splashRings[i];p.life-=dt;const age=1-p.life/.8;p.mesh.scale.setScalar(1+age*8);p.mesh.material.opacity=Math.max(0,p.life);if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose();splashRings.splice(i,1);}}
 drawMap();renderer.render(scene,camera);}
+
+/* ECLIPSE-style quality-of-life upgrade: persistent progression and save status. */
+const __saveStatus = document.createElement('div');
+__saveStatus.id = 'autoSaveStatus';
+__saveStatus.setAttribute('role','status');
+__saveStatus.textContent = '● AUTO-SAVE READY';
+Object.assign(__saveStatus.style,{
+ position:'fixed',right:'18px',bottom:'118px',zIndex:'12',padding:'8px 11px',
+ border:'1px solid rgba(131,244,208,.48)',borderRadius:'9px',
+ background:'rgba(5,25,31,.88)',color:'#a8ffe5',font:'800 10px/1.2 system-ui',
+ letterSpacing:'.08em',boxShadow:'0 5px 18px #00121d66',pointerEvents:'none',
+ backdropFilter:'blur(8px)',transition:'opacity .25s'
+});
+document.body.appendChild(__saveStatus);
+const __SAVE_KEY = 'reincarnatedMonsterEvolution.save.v1';
+let __saveBusy = false;
+function saveGameState(){
+ if(__saveBusy) return;
+ __saveBusy = true;
+ try {
+  const data = {
+   version:1, savedAt:Date.now(), level:playerLevel, xp:playerXP,
+   health:playerHealth, coins:playerCoins, upgradePoints,
+   stats:{...characterStats}, weaponUpgradeLevels:{...weaponUpgradeLevels},
+   ownedWeaponAbilities:JSON.parse(JSON.stringify(ownedWeaponAbilities)),
+   ownedWeaponRanks:{...ownedWeaponRanks}, selectedRace, raceApplied, raceAbilityRanks,
+   activeElderQuest:activeElderQuest?{...activeElderQuest}:null,
+   elderQuestSerial
+  };
+  localStorage.setItem(__SAVE_KEY,JSON.stringify(data));
+  __saveStatus.textContent='✓ PROGRESS AUTO-SAVED';
+  __saveStatus.style.borderColor='rgba(131,244,208,.65)';
+ } catch(err) {
+  __saveStatus.textContent='! SAVE UNAVAILABLE';
+  __saveStatus.style.borderColor='rgba(255,156,134,.75)';
+ } finally { __saveBusy = false; }
+}
+function loadGameState(){
+ try {
+  const raw=localStorage.getItem(__SAVE_KEY);
+  if(!raw) return;
+  const d=JSON.parse(raw);
+  if(!d||d.version!==1) return;
+  playerLevel=Math.max(1,Math.min(50,Math.floor(Number(d.level)||1)));
+  playerXP=Math.max(0,Math.floor(Number(d.xp)||0));
+  playerCoins=Math.max(0,Math.floor(Number(d.coins)||0));
+  upgradePoints=Math.max(0,Math.floor(Number(d.upgradePoints)||0));
+  for(const k of ['strength','health','stamina','mana']) characterStats[k]=Math.max(0,Math.min(99,Math.floor(Number(d.stats?.[k])||0)));
+  for(const k of ['fists','katana','bow']) weaponUpgradeLevels[k]=Math.max(0,Math.min(30,Math.floor(Number(d.weaponUpgradeLevels?.[k])||0)));
+  for(const k of ['katana','bow']) ownedWeaponRanks[k]=Math.max(0,Math.min(weaponRanks.length-1,Math.floor(Number(d.ownedWeaponRanks?.[k])||0)));
+  for(const w of ['fists','katana','bow']) for(const key of ['Q','E']) ownedWeaponAbilities[w][key]=d.ownedWeaponAbilities?.[w]?.[key]===true;
+  if(races[d.selectedRace]) selectedRace=d.selectedRace;
+  raceApplied=d.raceApplied===true;
+  raceChoicePending=false;
+  raceAbilityRanks=Math.max(0,Math.min(5,Math.floor(Number(d.raceAbilityRanks)||0)));
+  activeElderQuest=d.activeElderQuest&&monsterTypes[d.activeElderQuest.type]?{
+   name:String(d.activeElderQuest.name||'Elder Quest'),type:d.activeElderQuest.type,
+   count:Math.max(1,Math.floor(Number(d.activeElderQuest.count)||1)),
+   progress:Math.max(0,Math.min(Math.floor(Number(d.activeElderQuest.count)||1),Math.floor(Number(d.activeElderQuest.progress)||0))),
+   coins:Math.max(0,Math.floor(Number(d.activeElderQuest.coins)||0)),
+   xp:Math.max(0,Math.floor(Number(d.activeElderQuest.xp)||0))
+  }:null;
+  elderQuestSerial=Math.max(0,Math.floor(Number(d.elderQuestSerial)||0));
+  playerMaxHealth=Math.round((100+(playerLevel-1)*8)*scaledRaceStat('health'))+statMaxHealthBonus();
+  playerHealth=Math.max(1,Math.min(playerMaxHealth,Number(d.health)||playerMaxHealth));
+  player.speed=player.walkSpeed*scaledRaceStat('speed')*(1+characterStats.stamina*.04);
+  if(raceApplied){
+   document.getElementById('raceAwakening')?.classList.add('hidden');
+   raceButtons.forEach(button=>{button.disabled=true;button.classList.toggle('selected',button.dataset.race===selectedRace);});
+   const race=races[selectedRace]||races.human;
+   raceSummary.textContent='RESTORED: '+race.name.toUpperCase()+' · RACE LOCKED';
+   if(awakenButton){awakenButton.disabled=true;awakenButton.textContent=race.name.toUpperCase()+' AWAKENED · RACE LOCKED';}
+  }
+  updateShopUI();updateStatUI();updateProgressUI();updateWeaponAbilityUI();
+  __saveStatus.textContent='✓ SAVE RESTORED';
+ } catch(err) {
+  console.warn('Save data could not be loaded:',err);
+  __saveStatus.textContent='● NEW ADVENTURE';
+ }
+}
+const __originalProgressUI=updateProgressUI;
+updateProgressUI=function(...args){const result=__originalProgressUI.apply(this,args);saveGameState();return result;};
+const __originalShopUI=updateShopUI;
+updateShopUI=function(...args){const result=__originalShopUI.apply(this,args);saveGameState();return result;};
+const __originalWeaponAbilityUI=updateWeaponAbilityUI;
+updateWeaponAbilityUI=function(...args){const result=__originalWeaponAbilityUI.apply(this,args);saveGameState();return result;};
+loadGameState();
+window.addEventListener('pagehide',saveGameState);
+
 updateAmmoUI();updateProgressUI();updateAbilityUI();
 requestAnimationFrame(animate);
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));});
