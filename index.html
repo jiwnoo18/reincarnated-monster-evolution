@@ -116,7 +116,7 @@ guard.position.y=.17;guard.rotation.z=-.08;katanaGroup.add(guard);
 const guardCap=new THREE.Mesh(new THREE.SphereGeometry(.035,8,6),katanaGuardMat);
 guardCap.position.set(.105,.17,0);katanaGroup.add(guardCap);
 const bladeShape=new THREE.Shape();
-bladeShape.moveTo(-.025,0);bladeShape.lineTo(.027,0);bladeShape.lineTo(.023,.76);bladeShape.lineTo(.012,.91);bladeShape.lineTo(-.006,.98);bladeShape.lineTo(-.025,.91);bladeShape.lineTo(-.03,.15);bladeShape.close();
+bladeShape.moveTo(-.025,0);bladeShape.lineTo(.027,0);bladeShape.lineTo(.023,.76);bladeShape.lineTo(.012,.91);bladeShape.lineTo(-.006,.98);bladeShape.lineTo(-.025,.91);bladeShape.lineTo(-.03,.15);bladeShape.closePath();
 const bladeGeo=new THREE.ExtrudeGeometry(bladeShape,{depth:.018,bevelEnabled:true,bevelSegments:1,steps:1,bevelSize:.004,bevelThickness:.004});
 const blade=new THREE.Mesh(bladeGeo,katanaBladeMat);blade.position.set(0,.19,-.009);katanaGroup.add(blade);
 const bladeEdge=new THREE.Mesh(new THREE.BoxGeometry(.008,.79,.008),katanaDarkMat);
