@@ -425,7 +425,7 @@ let selectedRace='human',raceApplied=false;
 let playerLevel=1,playerXP=0,playerHealth=100,playerMaxHealth=100,playerDamageCooldown=0;
 function currentRace(){return races[selectedRace]||races.human;}
 function raceDamageMultiplier(){return currentRace().damage;}
-function applySelectedRace(){if(raceApplied)return;const race=currentRace();playerMaxHealth=Math.round(100*race.health);playerHealth=playerMaxHealth;player.walkSpeed=11*race.speed;player.speed=player.walkSpeed*races[selectedRace].speed;raceApplied=true;document.getElementById('hint').textContent=race.name.toUpperCase()+' bloodline awakened';updateProgressUI();}
+function applySelectedRace(){if(raceApplied)return;const race=currentRace();playerMaxHealth=Math.round(100*race.health);playerHealth=playerMaxHealth;player.walkSpeed=11;player.speed=player.walkSpeed*race.speed;raceApplied=true;document.getElementById('hint').textContent=race.name.toUpperCase()+' bloodline awakened';updateProgressUI();}
 const monsters=[];
 const monsterTypes={
  slime:{name:'Slime',unlock:1,count:50,hp:35,damage:4,speed:2.1,xp:15,radius:.8,height:1.25,color:0x53e0a0},
