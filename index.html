@@ -13,11 +13,11 @@
  <div class="brand"><strong>REINCARNATED</strong><span>MONSTER EVOLUTION · PROLOGUE</span></div>
  <div class="hint" id="hint">Explore your new world · No enemies, just discovery</div>
  <div class="crosshair"></div>
- <div class="panel"><b>MOVE</b><br><span class="key">W</span> Forward &nbsp; <span class="key">S</span> Back<br><span class="key">A</span> Left &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="key">D</span> Right<br><b>LOOK</b> · Move mouse<br><b>ESC</b> · Release mouse</div>
+ <div class="panel"><b>MOVE</b><br><span class="key">W</span> Forward &nbsp; <span class="key">S</span> Back<br><span class="key">A</span> Left &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="key">D</span> Right<br><b>JUMP</b> · <span class="key">SPACE</span><br><b>LOOK</b> · Move mouse<br><b>ESC</b> · Release mouse</div>
  <div class="bottomright">EARLY ACCESS · MOVEMENT TEST<br>Fantasy wilderness · Chapter 01</div>
  <div id="notice">Click to capture mouse</div>
 </div>
-<div class="start" id="start"><div class="card"><div class="orb"></div><h1>Reincarnated:<br>Monster Evolution</h1><p>You have awakened in a mysterious new world.<br>Take your first steps and explore the wilderness.<br><b>Movement prototype · No monsters yet.</b></p><button class="startbtn" id="play">ENTER THE WORLD</button><p style="font-size:11px;margin-bottom:0">WASD to move · Mouse to look around</p></div></div>
+<div class="start" id="start"><div class="card"><div class="orb"></div><h1>Reincarnated:<br>Monster Evolution</h1><p>You have awakened in a mysterious new world.<br>Take your first steps and explore the wilderness.<br><b>Movement prototype · No monsters yet.</b></p><button class="startbtn" id="play">ENTER THE WORLD</button><p style="font-size:11px;margin-bottom:0">WASD to move · Space to jump · Mouse to look</p></div></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
 const scene=new THREE.Scene();
@@ -46,18 +46,20 @@ let seed=8347;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/429
 for(let i=0;i<250;i++){const a=rand()*Math.PI*2,r=22+rand()*245,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.hypot(x,z)<15)continue;tree(x,z,.65+rand()*.85);}
 const rockMat=mat(0x78877b);for(let i=0;i<85;i++){const a=rand()*Math.PI*2,r=18+rand()*240,x=Math.cos(a)*r,z=Math.sin(a)*r;const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.7+rand()*2,0),rockMat);rock.position.set(x,terrainY(x,z)+.25,z);rock.scale.y=.5+rand()*.8;rock.rotation.set(rand(),rand()*3,rand());rock.castShadow=true;scene.add(rock);}
 const flowerColors=[0xffe7a1,0xffb8d1,0xe2c6ff,0xffffff];for(let i=0;i<240;i++){const a=rand()*Math.PI*2,r=5+rand()*28,x=Math.cos(a)*r,z=Math.sin(a)*r;const f=new THREE.Mesh(new THREE.SphereGeometry(.13,6,5),new THREE.MeshStandardMaterial({color:flowerColors[i%4],emissive:flowerColors[i%4],emissiveIntensity:.08}));f.position.set(x,terrainY(x,z)+.3+rand()*.15,z);scene.add(f);}
-const player={x:0,y:0,z:8,yaw:0,pitch:-.08,speed:11};camera.position.set(player.x,2.4,player.z);
+const player={x:0,y:0,z:8,yaw:0,pitch:-.08,speed:11,jumpY:0,verticalSpeed:0,onGround:true};camera.position.set(player.x,2.4,player.z);
 let locked=false;const start=document.getElementById('start'),notice=document.getElementById('notice');
 function lock(){renderer.domElement.requestPointerLock?.();}
 document.getElementById('play').addEventListener('click',()=>{start.classList.add('hidden');lock();});
 renderer.domElement.addEventListener('click',()=>{if(start.classList.contains('hidden')&&!locked)lock();});
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===renderer.domElement;notice.style.opacity=locked?'0':'1';});
 document.addEventListener('mousemove',e=>{if(!locked)return;player.yaw-=e.movementX*.0022;player.pitch-=e.movementY*.0018;player.pitch=Math.max(-1.35,Math.min(1.25,player.pitch));});
-const keys=new Set();document.addEventListener('keydown',e=>{if(['KeyW','KeyA','KeyS','KeyD'].includes(e.code)){keys.add(e.code);e.preventDefault();}});document.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',()=>keys.clear());
+const keys=new Set();let jumpQueued=false;document.addEventListener('keydown',e=>{if(['KeyW','KeyA','KeyS','KeyD','Space'].includes(e.code)){e.preventDefault();}if(['KeyW','KeyA','KeyS','KeyD'].includes(e.code))keys.add(e.code);if(e.code==='Space'&&!e.repeat)jumpQueued=true;});document.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',()=>{keys.clear();jumpQueued=false;});
 let prev=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-prev)/1000,.05);prev=now;
 const forward=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),side=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);let dx=0,dz=0;const mag=Math.hypot(forward,side)||1;
 if(forward||side){dx=(-Math.sin(player.yaw)*forward+Math.cos(player.yaw)*side)/mag;dz=(-Math.cos(player.yaw)*forward-Math.sin(player.yaw)*side)/mag;player.x+=dx*player.speed*dt;player.z+=dz*player.speed*dt;}
-player.y=terrainY(player.x,player.z);camera.position.set(player.x,player.y+2.15,player.z);camera.rotation.set(player.pitch,player.yaw,0);renderer.render(scene,camera);}
+if(jumpQueued&&player.onGround){player.verticalSpeed=8.5;player.onGround=false;}jumpQueued=false;
+if(!player.onGround){player.jumpY+=player.verticalSpeed*dt;player.verticalSpeed-=22*dt;if(player.jumpY<=0){player.jumpY=0;player.verticalSpeed=0;player.onGround=true;}}
+player.y=terrainY(player.x,player.z);camera.position.set(player.x,player.y+2.15+player.jumpY,player.z);camera.rotation.set(player.pitch,player.yaw,0);renderer.render(scene,camera);}
 requestAnimationFrame(animate);
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));});
 </script>
