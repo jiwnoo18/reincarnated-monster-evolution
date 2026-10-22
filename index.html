@@ -20,7 +20,13 @@
 </div>
 <div class="start" id="start"><div class="card"><div class="orb"></div><h1>Reincarnated:<br>Monster Evolution</h1><p>You have awakened in a mysterious new world.<br>Take your first steps and explore the wilderness.<br><b>Movement prototype · No monsters yet.</b></p><button class="startbtn" id="play">ENTER THE WORLD</button><p style="font-size:11px;margin-bottom:0">WASD to move · Space to jump · Mouse to look</p></div></div>
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
+try {
+let THREE;
+try {
+  THREE = await import('https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js');
+} catch (firstError) {
+  THREE = await import('https://unpkg.com/three@0.164.1/build/three.module.js');
+}
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x91d0ee);
 scene.fog=new THREE.FogExp2(0x91d0ee,0.0042);
@@ -66,6 +72,19 @@ if(!player.onGround){player.jumpY+=player.verticalSpeed*dt;player.verticalSpeed-
 player.y=terrainY(player.x,player.z);camera.position.set(player.x,player.y+2.15+player.jumpY,player.z);camera.rotation.set(player.pitch,player.yaw,0);drawMap();renderer.render(scene,camera);}
 requestAnimationFrame(animate);
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));});
+
+} catch (error) {
+  console.error('Game startup failed:', error);
+  const card = document.querySelector('.card');
+  if (card) {
+    const message = document.createElement('p');
+    message.style.color = '#ffd1d1';
+    message.textContent = 'The 3D engine could not load. Check your internet connection and refresh the page. Details: ' + (error?.message || error);
+    card.appendChild(message);
+    const button = document.getElementById('play');
+    if (button) { button.textContent = 'REFRESH PAGE'; button.onclick = () => location.reload(); }
+  }
+}
 </script>
 </body>
 </html>
