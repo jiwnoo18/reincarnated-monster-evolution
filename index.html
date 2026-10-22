@@ -52,16 +52,16 @@ scene.fog=new THREE.FogExp2(0x91d0ee,0.00085);
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,6000);
 camera.rotation.order='YXZ';
 scene.add(camera);
-// First-person arms and hands, mounted to the camera so they stay visible while looking around.
+// First-person arms with visible upper arms, forearms, cuffs, palms and fingers.
 const firstPersonHands=new THREE.Group();
 camera.add(firstPersonHands);
 const sleeveMat=new THREE.MeshStandardMaterial({color:0x202b35,roughness:.88});
-const cuffMat=new THREE.MeshStandardMaterial({color:0x9a7745,metalness:.25,roughness:.6});
+const cuffMat=new THREE.MeshStandardMaterial({color:0x9a7745,metalness:.18,roughness:.62});
 const skinMat=new THREE.MeshStandardMaterial({color:0xc98d67,roughness:.82});
 const handDetailMat=new THREE.MeshStandardMaterial({color:0xb97855,roughness:.9});
-function makeLimbBetween(group,a,b,radius,material,roundness=5){
+function makeLimbBetween(group,a,b,radius,material,roundness=6){
  const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start);
- const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(radius,Math.max(.02,delta.length()-radius*2),4,roundness),material);
+ const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(radius,Math.max(.025,delta.length()-radius*2),5,roundness),material);
  mesh.position.copy(start).add(end).multiplyScalar(.5);
  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
  mesh.frustumCulled=false;
@@ -69,19 +69,19 @@ function makeLimbBetween(group,a,b,radius,material,roundness=5){
  return mesh;
 }
 function makeFirstPersonArm(side){
- const g=new THREE.Group();
- const s=side;
- // Forearm sleeve, leather cuff, palm and four clearly visible fingers.
- makeLimbBetween(g,[s*.72,-.92,-1.22],[s*.43,-.66,-.88],.115,sleeveMat);
- makeLimbBetween(g,[s*.45,-.68,-.91],[s*.40,-.62,-.84],.12,cuffMat);
- const palm=new THREE.Mesh(new THREE.BoxGeometry(.19,.19,.105),skinMat);
- palm.position.set(s*.385,-.565,-.79);palm.rotation.z=s*-.16;g.add(palm);
- // Fingers point slightly forward and downward from the palm.
+ const g=new THREE.Group(),s=side;
+ // Sleeves reach in from both lower screen corners to the wrists.
+ makeLimbBetween(g,[s*.99,-.47,-.72],[s*.70,-.76,-1.02],.17,sleeveMat,7);
+ makeLimbBetween(g,[s*.70,-.76,-1.02],[s*.43,-.61,-.86],.125,sleeveMat,7);
+ makeLimbBetween(g,[s*.455,-.625,-.865],[s*.395,-.585,-.815],.13,cuffMat,7);
+ const palm=new THREE.Mesh(new THREE.BoxGeometry(.205,.18,.12),skinMat);
+ palm.position.set(s*.365,-.545,-.785);palm.rotation.z=-s*.13;palm.frustumCulled=false;g.add(palm);
+ // Four fingers and a thumb, clearly joined to the palm.
  for(let i=0;i<4;i++){
-  const x=s*(.315+i*.045);
-  makeLimbBetween(g,[x,-.625,-.775],[x+s*.012,-.70,-.745],.027,skinMat,4);
+  const x=s*(.295+i*.045);
+  makeLimbBetween(g,[x,-.60,-.79],[x+s*.008,-.665,-.765],.027,skinMat,5);
  }
- makeLimbBetween(g,[s*.30,-.56,-.79],[s*.265,-.61,-.755],.032,handDetailMat,4);
+ makeLimbBetween(g,[s*.29,-.535,-.79],[s*.245,-.585,-.765],.034,handDetailMat,5);
  firstPersonHands.add(g);
  return g;
 }
@@ -285,7 +285,16 @@ const keys=new Set();let jumpQueued=false;document.addEventListener('keydown',e=
 const mapCanvas=document.getElementById('mapCanvas'),mapCtx=mapCanvas.getContext('2d');
 function drawMap(){const ctx=mapCtx,w=mapCanvas.width,h=mapCanvas.height,cx=w/2,cy=h/2,range=260,scale=(w*.46)/range;ctx.clearRect(0,0,w,h);ctx.save();ctx.beginPath();ctx.arc(cx,cy,w*.48,0,Math.PI*2);ctx.clip();ctx.fillStyle='#4f8752';ctx.fillRect(0,0,w,h);ctx.fillStyle='#568b59';for(let i=0;i<16;i++){const x=(i*47+17)%w,y=(i*71+13)%h;ctx.beginPath();ctx.ellipse(x,y,12+(i%4)*4,7+(i%3)*4,i*.4,0,Math.PI*2);ctx.fill();}/* Draw only the real lake locations on the minimap; no water legend/key is shown. */for(const lake of lakes){const x=cx+(lake.x-player.x)*scale,y=cy+(lake.z-player.z)*scale,rx=lake.r*scale*1.13,ry=lake.r*scale*.82;if(x+rx<-2||x-rx>w+2||y+ry<-2||y-ry>h+2)continue;ctx.fillStyle='#438db0';ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#b8ad7a';ctx.lineWidth=Math.max(1,2*scale);ctx.stroke();}for(const p of mapTrees){const x=cx+(p.x-player.x)*scale,y=cy+(p.z-player.z)*scale;if(x<0||x>w||y<0||y>h)continue;ctx.fillStyle='#174c31';ctx.beginPath();ctx.arc(x,y,2.1,0,Math.PI*2);ctx.fill();}for(const p of mapRocks){const x=cx+(p.x-player.x)*scale,y=cy+(p.z-player.z)*scale;if(x<0||x>w||y<0||y>h)continue;ctx.fillStyle='#a6a99a';ctx.fillRect(x-1,y-1,2,2);}ctx.strokeStyle='#d9f6c5';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,h);ctx.moveTo(0,cy);ctx.lineTo(w,cy);ctx.stroke();ctx.translate(cx,cy);ctx.rotate(-player.yaw);ctx.fillStyle='#ffffff';ctx.strokeStyle='#07534c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(6,7);ctx.lineTo(0,4);ctx.lineTo(-6,7);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
 let prev=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-prev)/1000,.05);prev=now;waterTime+=dt;if(lakeWaterMat.userData.waterShader)lakeWaterMat.userData.waterShader.uniforms.uWaterTime.value=waterTime;
-player.speed=player.walkSpeed;const forward=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),side=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);let dx=0,dz=0;const mag=Math.hypot(forward,side)||1;
+player.speed=player.walkSpeed;
+const isMoving=keys.has('KeyW')||keys.has('KeyA')||keys.has('KeyS')||keys.has('KeyD');
+const gait=now*.012;
+const moveBob=isMoving?Math.abs(Math.sin(gait))*.035:Math.sin(now*.0018)*.008;
+firstPersonHands.position.y=moveBob;
+leftFirstPersonArm.rotation.x=isMoving?Math.sin(gait)*.075:Math.sin(now*.0018)*.012;
+rightFirstPersonArm.rotation.x=isMoving?-Math.sin(gait)*.075:Math.sin(now*.0018+1)*.012;
+leftFirstPersonArm.rotation.z=isMoving?Math.sin(gait)*.025:0;
+rightFirstPersonArm.rotation.z=isMoving?-Math.sin(gait)*.025:0;
+const forward=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),side=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);let dx=0,dz=0;const mag=Math.hypot(forward,side)||1;
 if(forward||side){
  dx=(-Math.sin(player.yaw)*forward+Math.cos(player.yaw)*side)/mag;
  dz=(-Math.cos(player.yaw)*forward-Math.sin(player.yaw)*side)/mag;
