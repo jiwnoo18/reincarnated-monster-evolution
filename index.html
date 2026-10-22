@@ -18,6 +18,14 @@
  #ammoCounter b{font-size:15px}
 }
 
+/* Visual polish: cinematic atmosphere, soft edge vignette and subtle animated sun haze. */
+html,body{background:#91c9a1}
+body:after{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,transparent 42%,rgba(9,30,27,.09) 76%,rgba(5,20,25,.28) 120%);box-shadow:inset 0 0 100px rgba(8,35,30,.16)}
+body:before{content:"";position:fixed;inset:-30%;z-index:1;pointer-events:none;opacity:.16;background:linear-gradient(112deg,transparent 35%,rgba(255,244,198,.12) 46%,transparent 57%);transform:translateX(-12%);animation:sunHazeDrift 22s ease-in-out infinite alternate}
+@keyframes sunHazeDrift{from{transform:translateX(-12%) rotate(-4deg)}to{transform:translateX(12%) rotate(4deg)}}
+#minimap,#levelPanel,#statPanel,#coinCounter,#ammoCounter,.weapon-slot,.ability-slot,#bottomStatus{box-shadow:0 8px 28px rgba(0,15,18,.38),inset 0 1px rgba(255,255,255,.06)}
+#bottomStatus{border-color:#bfffee88}
+@media(prefers-reduced-motion:reduce){body:before,#underwaterOverlay:before{animation:none}}
 </style>
 </head>
 <body>
@@ -289,8 +297,47 @@ function terrainY(x,z){
  return y;
 }
 const groundGeo=new THREE.PlaneGeometry(4000,4000,320,320);groundGeo.rotateX(-Math.PI/2);const pos=groundGeo.attributes.position;
-for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i);pos.setY(i,terrainY(x,z));}groundGeo.computeVertexNormals();
-const ground=new THREE.Mesh(groundGeo,new THREE.MeshStandardMaterial({color:0x5c9f55,roughness:1}));ground.receiveShadow=true;scene.add(ground);
+const terrainColors=new Float32Array(pos.count*3);
+const meadowColor=new THREE.Color(0x70b85b), deepGrassColor=new THREE.Color(0x34784b), highlandColor=new THREE.Color(0x8a9b76), rockColor=new THREE.Color(0x777f7c);
+for(let i=0;i<pos.count;i++){
+ const x=pos.getX(i),z=pos.getZ(i),y=terrainY(x,z);pos.setY(i,y);
+ const noise=(Math.sin(x*.071+z*.039)*Math.cos(z*.053-x*.027)+Math.sin((x-z)*.11)*.25);
+ const c=meadowColor.clone().lerp(deepGrassColor,THREE.MathUtils.clamp(.28+noise*.22,0,.68));
+ if(y>17)c.lerp(highlandColor,THREE.MathUtils.clamp((y-17)/20,0,.72));
+ if(y>29)c.lerp(rockColor,THREE.MathUtils.clamp((y-29)/18,0,.78));
+ const shade=.91+noise*.10;c.multiplyScalar(shade);
+ terrainColors[i*3]=c.r;terrainColors[i*3+1]=c.g;terrainColors[i*3+2]=c.b;
+}
+groundGeo.setAttribute('color',new THREE.BufferAttribute(terrainColors,3));groundGeo.computeVertexNormals();
+const ground=new THREE.Mesh(groundGeo,new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:1}));ground.receiveShadow=true;scene.add(ground);
+// Low-cost instanced meadow details add scale and depth without creating hundreds of separate draw calls.
+const detailRand=(min,max)=>min+Math.random()*(max-min);
+const grassGeo=new THREE.ConeGeometry(.22,.72,5);
+const grassMat=new THREE.MeshStandardMaterial({color:0x6da95b,roughness:1});
+const grassMat2=new THREE.MeshStandardMaterial({color:0x91bd68,roughness:1});
+for(const [geo,material,seedOffset] of [[grassGeo,grassMat,0],[new THREE.ConeGeometry(.14,.48,5),grassMat2,1]]){
+ const inst=new THREE.InstancedMesh(geo,material,900);inst.frustumCulled=true;
+ const dummy=new THREE.Object3D();let count=0;
+ for(let i=0;i<900;i++){
+  const x=detailRand(-480,480),z=detailRand(-480,480);
+  if(Math.hypot(x,z+52)<52||lakes.some(l=>Math.hypot(x-l.x,z-l.z)<l.r*1.3))continue;
+  const y=terrainY(x,z);if(y<-3)continue;
+  dummy.position.set(x,y+.22,z);dummy.rotation.set(0,detailRand(0,Math.PI*2),detailRand(-.12,.12));
+  const scale=detailRand(.55,1.35);dummy.scale.set(scale,scale,scale);dummy.updateMatrix();inst.setMatrixAt(count++,dummy.matrix);
+ }
+ inst.count=count;inst.castShadow=false;inst.receiveShadow=false;scene.add(inst);
+}
+const pebbleGeo=new THREE.DodecahedronGeometry(1,0);
+const pebbleMat=new THREE.MeshStandardMaterial({color:0x777f78,roughness:1});
+const pebbles=new THREE.InstancedMesh(pebbleGeo,pebbleMat,260);const pebbleDummy=new THREE.Object3D();let pebbleCount=0;
+for(let i=0;i<260;i++){
+ const x=detailRand(-520,520),z=detailRand(-520,520);
+ if(Math.hypot(x,z+52)<58||lakes.some(l=>Math.hypot(x-l.x,z-l.z)<l.r*1.25))continue;
+ const y=terrainY(x,z);if(y<-3)continue;
+ pebbleDummy.position.set(x,y+.18,z);pebbleDummy.rotation.set(detailRand(0,1),detailRand(0,Math.PI),detailRand(0,1));
+ pebbleDummy.scale.set(detailRand(.25,.9),detailRand(.18,.48),detailRand(.25,.75));pebbleDummy.updateMatrix();pebbles.setMatrixAt(pebbleCount++,pebbleDummy.matrix);
+}
+pebbles.count=pebbleCount;pebbles.castShadow=false;pebbles.receiveShadow=true;scene.add(pebbles);
 // Deep water is kept far below the land; the visible lakes are separate water bodies.
 const deepWater=new THREE.Mesh(new THREE.PlaneGeometry(5000,5000),new THREE.MeshStandardMaterial({color:0x327da0,roughness:.3,metalness:.08,transparent:true,opacity:.9}));deepWater.rotation.x=-Math.PI/2;deepWater.position.y=-45;scene.add(deepWater);
 const lakeWaterMat=new THREE.MeshStandardMaterial({color:0x48a9ce,roughness:.19,metalness:.12,transparent:true,opacity:.91});
