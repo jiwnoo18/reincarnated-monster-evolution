@@ -15,7 +15,7 @@
  <div class="weapon-slots" id="weaponSlots" aria-label="Weapon slots">
   <button class="weapon-slot active" data-slot="1" aria-pressed="true" title="Select weapon slot 1"><span class="weapon-icon">✊</span><span class="weapon-name">FISTS</span><span class="weapon-key">1</span></button>
   <button class="weapon-slot" data-slot="2" aria-pressed="false" title="Select weapon slot 2"><span class="weapon-icon">⚔</span><span class="weapon-name">KATANA</span><span class="weapon-key">2</span></button>
-  <button class="weapon-slot" data-slot="3" aria-pressed="false" title="Select wand in weapon slot 3"><span class="weapon-icon">✦</span><span class="weapon-name">WAND</span><span class="weapon-key">3</span></button>
+  <button class="weapon-slot" data-slot="3" aria-pressed="false" title="Select bow in weapon slot 3"><span class="weapon-icon">➶</span><span class="weapon-name">BOW</span><span class="weapon-key">3</span></button>
  </div>
  <div id="minimap"><div class="maplabel">WORLD MAP</div><canvas id="mapCanvas" width="160" height="160"></canvas></div>
  <div class="crosshair"></div>
@@ -24,7 +24,7 @@
  <div id="notice">Click to capture mouse</div>
 </div>
 <div id="underwaterOverlay" aria-hidden="true"></div>
-<div class="start" id="start"><div class="card"><div class="orb"></div><h1>Reincarnated:<br>Monster Evolution</h1><p>You have awakened in a mysterious new world.<br>Take your first steps and explore the wilderness.<br><b>Movement prototype · No monsters yet.</b></p><button class="startbtn" id="play">ENTER THE WORLD</button><p style="font-size:11px;margin-bottom:0">WASD to move · Space to jump · 1 fists · 2 katana · 3 wand · E / click to attack</p></div></div>
+<div class="start" id="start"><div class="card"><div class="orb"></div><h1>Reincarnated:<br>Monster Evolution</h1><p>You have awakened in a mysterious new world.<br>Take your first steps and explore the wilderness.<br><b>Movement prototype · No monsters yet.</b></p><button class="startbtn" id="play">ENTER THE WORLD</button><p style="font-size:11px;margin-bottom:0">WASD to move · Space to jump · 1 fists · 2 katana · 3 bow · E / click to shoot</p></div></div>
 <script type="module">
 try {
 let THREE;
@@ -123,28 +123,43 @@ const bladeEdge=new THREE.Mesh(new THREE.BoxGeometry(.008,.79,.008),katanaDarkMa
 bladeEdge.position.set(-.025,.60,.014);katanaGroup.add(bladeEdge);
 katanaGroup.visible=false;
 
-// Slot 3 magic wand, attached to the right hand.
-const wandGroup=new THREE.Group();
-wandGroup.position.set(.39,-.535,-.80);
-wandGroup.rotation.set(-.08,0,-.12);
-rightFirstPersonArm.add(wandGroup);
-const wandWoodMat=new THREE.MeshStandardMaterial({color:0x57351f,roughness:.72});
-const wandGoldMat=new THREE.MeshStandardMaterial({color:0xd5ad52,metalness:.72,roughness:.28});
-const wandCrystalMat=new THREE.MeshStandardMaterial({color:0x65e9ff,emissive:0x168bb8,emissiveIntensity:2.1,metalness:.25,roughness:.18});
-const wandStaff=new THREE.Mesh(new THREE.CylinderGeometry(.026,.043,.78,10),wandWoodMat);
-wandStaff.position.y=.10;wandGroup.add(wandStaff);
-for(const y of [-.25,.39,.48]){
- const band=new THREE.Mesh(new THREE.TorusGeometry(.039,.009,6,12),wandGoldMat);
- band.position.y=y;band.rotation.x=Math.PI/2;wandGroup.add(band);
+// Slot 3 bow, held in the right hand.
+const bowGroup=new THREE.Group();
+bowGroup.position.set(.39,-.535,-.80);
+bowGroup.rotation.set(-.08,0,-.12);
+rightFirstPersonArm.add(bowGroup);
+const bowWoodMat=new THREE.MeshStandardMaterial({color:0x75451f,roughness:.72});
+const bowGoldMat=new THREE.MeshStandardMaterial({color:0xc69a4b,metalness:.62,roughness:.32});
+const bowStringMat=new THREE.LineBasicMaterial({color:0xe9e0c8});
+const arrowWoodMat=new THREE.MeshStandardMaterial({color:0xc7a36a,roughness:.68});
+const arrowMetalMat=new THREE.MeshStandardMaterial({color:0xdcecf2,metalness:.72,roughness:.25});
+const bowCurve=new THREE.CatmullRomCurve3([
+ new THREE.Vector3(0,-.48,0),new THREE.Vector3(.18,-.36,0),
+ new THREE.Vector3(.29,-.12,0),new THREE.Vector3(.30,.12,0),
+ new THREE.Vector3(.18,.36,0),new THREE.Vector3(0,.48,0)
+]);
+bowGroup.add(new THREE.Mesh(new THREE.TubeGeometry(bowCurve,32,.035,8,false),bowWoodMat));
+const bowGrip=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.20,10),bowGoldMat);
+bowGrip.position.set(.015,0,.005);bowGroup.add(bowGrip);
+for(const y of [-.48,.48]){
+ const tip=new THREE.Mesh(new THREE.SphereGeometry(.038,8,6),bowGoldMat);
+ tip.position.set(0,y,0);bowGroup.add(tip);
 }
-const wandCrown=new THREE.Mesh(new THREE.TorusGeometry(.105,.018,8,18),wandGoldMat);
-wandCrown.position.y=.57;wandCrown.rotation.x=Math.PI/2;wandGroup.add(wandCrown);
-const wandOrb=new THREE.Mesh(new THREE.OctahedronGeometry(.105,1),wandCrystalMat);
-wandOrb.position.y=.58;wandGroup.add(wandOrb);
-const wandLight=new THREE.PointLight(0x45dfff,1.5,3);
-wandLight.position.copy(wandOrb.position);wandGroup.add(wandLight);
-wandGroup.visible=false;
-let wandSwing=0,wandSwingStart=0;
+const bowString=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+ new THREE.Vector3(0,-.48,.015),new THREE.Vector3(-.015,0,.015),new THREE.Vector3(0,.48,.015)
+]),bowStringMat);bowGroup.add(bowString);
+const arrowGroup=new THREE.Group();
+const arrowShaft=new THREE.Mesh(new THREE.CylinderGeometry(.009,.009,.70,6),arrowWoodMat);
+arrowShaft.rotation.x=Math.PI/2;arrowShaft.position.z=-.06;arrowGroup.add(arrowShaft);
+const arrowHead=new THREE.Mesh(new THREE.ConeGeometry(.027,.095,6),arrowMetalMat);
+arrowHead.rotation.x=-Math.PI/2;arrowHead.position.z=-.445;arrowGroup.add(arrowHead);
+for(const side of [-1,1]){
+ const feather=new THREE.Mesh(new THREE.BoxGeometry(.045,.055,.012),bowGoldMat);
+ feather.position.set(side*.018,0,.245);arrowGroup.add(feather);
+}
+arrowGroup.position.set(-.015,0,-.035);bowGroup.add(arrowGroup);
+bowGroup.visible=false;
+let bowSwing=0,bowSwingStart=0;
 let katanaSwing=0,katanaSwingStart=0;
 let fistPunch=0,fistPunchStart=0;
 function attackFist(){
@@ -155,14 +170,14 @@ function attackKatana(){
  if(activeWeaponSlot!==2||katanaSwing>0)return;
  katanaSwing=.34;katanaSwingStart=performance.now();
 }
-function attackWand(){
- if(activeWeaponSlot!==3||wandSwing>0)return;
- wandSwing=.38;wandSwingStart=performance.now();
+function attackBow(){
+ if(activeWeaponSlot!==3||bowSwing>0)return;
+ bowSwing=.42;bowSwingStart=performance.now();
 }
 function attackCurrentWeapon(){
  if(activeWeaponSlot===1)attackFist();
  else if(activeWeaponSlot===2)attackKatana();
- else if(activeWeaponSlot===3)attackWand();
+ else if(activeWeaponSlot===3)attackBow();
 }
 
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
@@ -364,7 +379,7 @@ const weaponSlotButtons=[...document.querySelectorAll('.weapon-slot')];
 function selectWeaponSlot(slot){
  activeWeaponSlot=slot;
  if(typeof katanaGroup!=='undefined')katanaGroup.visible=slot===2;
- if(typeof wandGroup!=='undefined')wandGroup.visible=slot===3;
+ if(typeof wandGroup!=='undefined')bowGroup.visible=slot===3;
  for(const button of weaponSlotButtons){
   const active=Number(button.dataset.slot)===slot;
   button.classList.toggle('active',active);
@@ -406,22 +421,19 @@ if(fistPunch>0){
  rightFirstPersonArm.rotation.z-=rightHit*.30;
 }
 katanaGroup.visible=activeWeaponSlot===2;
-wandGroup.visible=activeWeaponSlot===3;
+bowGroup.visible=activeWeaponSlot===3;
 if(katanaSwing>0){const progress=1-katanaSwing/.34;katanaSwing=Math.max(0,katanaSwing-dt);const arc=Math.sin(progress*Math.PI);katanaGroup.rotation.z=-.12+Math.sin(progress*Math.PI*2)*1.05;katanaGroup.rotation.x=-.15-arc*.45;katanaGroup.rotation.y=arc*.35;}else{katanaGroup.rotation.set(0,-0,-.12);}
-if(wandSwing>0){
- const progress=1-wandSwing/.38;wandSwing=Math.max(0,wandSwing-dt);
- const castArc=Math.sin(progress*Math.PI);
- wandGroup.rotation.z=-.12-castArc*.48;
- wandGroup.rotation.x=-.08-castArc*.70;
- wandGroup.position.z=-.80-castArc*.28;
- wandOrb.rotation.x=progress*8;
- wandOrb.rotation.y=progress*10;
- wandCrystalMat.emissiveIntensity=2.1+castArc*2.8;
+if(bowSwing>0){
+ const progress=1-bowSwing/.42;bowSwing=Math.max(0,bowSwing-dt);
+ const drawArc=Math.sin(progress*Math.PI);
+ bowGroup.rotation.z=-.12-drawArc*.22;
+ bowGroup.rotation.x=-.08+drawArc*.16;
+ bowGroup.position.z=-.80+drawArc*.12;
+ arrowGroup.position.z=-.035+drawArc*.20;
 }else{
- wandGroup.rotation.set(-.08,0,-.12);
- wandGroup.position.z=-.80;
- wandOrb.rotation.y=now*.0018;
- wandCrystalMat.emissiveIntensity=2.1;
+ bowGroup.rotation.set(-.08,0,-.12);
+ bowGroup.position.z=-.80;
+ arrowGroup.position.z=-.035;
 }
 const forward=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),side=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);let dx=0,dz=0;const mag=Math.hypot(forward,side)||1;
 if(forward||side){
