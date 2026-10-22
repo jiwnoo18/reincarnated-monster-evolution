@@ -29,8 +29,8 @@ try {
 }
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x91d0ee);
-scene.fog=new THREE.FogExp2(0x91d0ee,0.0042);
-const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,1200);
+scene.fog=new THREE.FogExp2(0x91d0ee,0.00085);
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,6000);
 camera.rotation.order='YXZ';
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;document.body.appendChild(renderer.domElement);
@@ -67,7 +67,7 @@ const lakeWaterMat=new THREE.MeshStandardMaterial({color:0x48a9ce,roughness:.19,
 const shoreMat=mat(0xb8ad7a);
 for(const lake of lakes){
  const surfaceY=baseTerrainY(lake.x,lake.z)-4.6;
- const shore=new THREE.Mesh(new THREE.CircleGeometry(lake.r*1.12,48),shoreMat);shore.rotation.x=-Math.PI/2;shore.position.set(lake.x,terrainY(lake.x,lake.z)+.15,lake.z);shore.scale.set(1.13,1,.82);scene.add(shore);
+ const shore=new THREE.Mesh(new THREE.RingGeometry(lake.r, lake.r*1.17, 64),shoreMat);shore.rotation.x=-Math.PI/2;shore.position.set(lake.x,surfaceY+.025,lake.z);shore.scale.set(1.13,1,.82);scene.add(shore);
  const geo=new THREE.CircleGeometry(lake.r,64);geo.rotateX(-Math.PI/2);
  const waterMesh=new THREE.Mesh(geo,lakeWaterMat);waterMesh.position.set(lake.x,surfaceY,lake.z);waterMesh.scale.set(1.13,1,.82);scene.add(waterMesh);
 }
