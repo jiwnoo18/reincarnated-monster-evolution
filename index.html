@@ -14,12 +14,12 @@
  <div class="hint" id="hint">Explore your new world · No enemies, just discovery</div>
  <div id="minimap"><div class="maplabel">WORLD MAP</div><canvas id="mapCanvas" width="160" height="160"></canvas></div>
  <div class="crosshair"></div>
- <div class="panel"><b>MOVE</b><br><span class="key">W</span> Forward &nbsp; <span class="key">S</span> Back<br><span class="key">A</span> Left &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="key">D</span> Right<br><b>JUMP</b> · <span class="key">SPACE</span><br><b>LOOK</b> · Move mouse<br><b>ESC</b> · Release mouse</div>
+ <div class="panel"><b>MOVE</b><br><span class="key">W</span> Forward &nbsp; <span class="key">S</span> Back<br><span class="key">A</span> Left &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="key">D</span> Right<br><b>RUN</b> · <span class="key">SHIFT</span><br><b>JUMP</b> · <span class="key">SPACE</span><br><b>LOOK</b> · Move mouse<br><b>ESC</b> · Release mouse</div>
  <div class="bottomright">EARLY ACCESS · MOVEMENT TEST<br>Fantasy wilderness · Chapter 01</div>
  <div id="notice">Click to capture mouse</div>
 </div>
 <div id="underwaterOverlay" aria-hidden="true"></div>
-<div class="start" id="start"><div class="card"><div class="orb"></div><h1>Reincarnated:<br>Monster Evolution</h1><p>You have awakened in a mysterious new world.<br>Take your first steps and explore the wilderness.<br><b>Movement prototype · No monsters yet.</b></p><button class="startbtn" id="play">ENTER THE WORLD</button><p style="font-size:11px;margin-bottom:0">WASD to move · Space to jump · Mouse to look</p></div></div>
+<div class="start" id="start"><div class="card"><div class="orb"></div><h1>Reincarnated:<br>Monster Evolution</h1><p>You have awakened in a mysterious new world.<br>Take your first steps and explore the wilderness.<br><b>Movement prototype · No monsters yet.</b></p><button class="startbtn" id="play">ENTER THE WORLD</button><p style="font-size:11px;margin-bottom:0">WASD to move · Shift to run · Space to jump · Mouse to look</p></div></div>
 <script type="module">
 try {
 let THREE;
@@ -225,7 +225,7 @@ if(modelLoader){
  }).catch(error=>console.warn('Poly Haven rock model failed; keeping procedural rocks.',error));
 }
 const flowerColors=[0xffe7a1,0xffb8d1,0xe2c6ff,0xffffff];for(let i=0;i<420;i++){const a=rand()*Math.PI*2,r=5+Math.sqrt(rand())*75,x=Math.cos(a)*r,z=Math.sin(a)*r;if(lakes.some(l=>Math.hypot(x-l.x,z-l.z)<l.r*1.1))continue;const f=new THREE.Mesh(new THREE.SphereGeometry(.13,6,5),new THREE.MeshStandardMaterial({color:flowerColors[i%4],emissive:flowerColors[i%4],emissiveIntensity:.08}));f.position.set(x,terrainY(x,z)+.3+rand()*.15,z);scene.add(f);}
-const player={x:0,y:0,z:8,yaw:0,pitch:-.08,speed:11,jumpY:0,verticalSpeed:0,onGround:true};camera.position.set(player.x,2.4,player.z);
+const player={x:0,y:0,z:8,yaw:0,pitch:-.08,speed:5.2,walkSpeed:5.2,runSpeed:12.5,jumpY:0,verticalSpeed:0,onGround:true};camera.position.set(player.x,2.4,player.z);
 const underwaterOverlay=document.getElementById('underwaterOverlay');
 const baseFogColor=new THREE.Color(0x91d0ee),underwaterFogColor=new THREE.Color(0x075ca8);let underwater=false,waterTime=0;
 const splashParticles=[];const splashRings=[];
@@ -249,7 +249,7 @@ const keys=new Set();let jumpQueued=false;document.addEventListener('keydown',e=
 const mapCanvas=document.getElementById('mapCanvas'),mapCtx=mapCanvas.getContext('2d');
 function drawMap(){const ctx=mapCtx,w=mapCanvas.width,h=mapCanvas.height,cx=w/2,cy=h/2,range=260,scale=(w*.46)/range;ctx.clearRect(0,0,w,h);ctx.save();ctx.beginPath();ctx.arc(cx,cy,w*.48,0,Math.PI*2);ctx.clip();ctx.fillStyle='#4f8752';ctx.fillRect(0,0,w,h);ctx.fillStyle='#568b59';for(let i=0;i<16;i++){const x=(i*47+17)%w,y=(i*71+13)%h;ctx.beginPath();ctx.ellipse(x,y,12+(i%4)*4,7+(i%3)*4,i*.4,0,Math.PI*2);ctx.fill();}/* Draw only the real lake locations on the minimap; no water legend/key is shown. */for(const lake of lakes){const x=cx+(lake.x-player.x)*scale,y=cy+(lake.z-player.z)*scale,rx=lake.r*scale*1.13,ry=lake.r*scale*.82;if(x+rx<-2||x-rx>w+2||y+ry<-2||y-ry>h+2)continue;ctx.fillStyle='#438db0';ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#b8ad7a';ctx.lineWidth=Math.max(1,2*scale);ctx.stroke();}for(const p of mapTrees){const x=cx+(p.x-player.x)*scale,y=cy+(p.z-player.z)*scale;if(x<0||x>w||y<0||y>h)continue;ctx.fillStyle='#174c31';ctx.beginPath();ctx.arc(x,y,2.1,0,Math.PI*2);ctx.fill();}for(const p of mapRocks){const x=cx+(p.x-player.x)*scale,y=cy+(p.z-player.z)*scale;if(x<0||x>w||y<0||y>h)continue;ctx.fillStyle='#a6a99a';ctx.fillRect(x-1,y-1,2,2);}ctx.strokeStyle='#d9f6c5';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,h);ctx.moveTo(0,cy);ctx.lineTo(w,cy);ctx.stroke();ctx.translate(cx,cy);ctx.rotate(-player.yaw);ctx.fillStyle='#ffffff';ctx.strokeStyle='#07534c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(6,7);ctx.lineTo(0,4);ctx.lineTo(-6,7);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
 let prev=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-prev)/1000,.05);prev=now;waterTime+=dt;if(lakeWaterMat.userData.waterShader)lakeWaterMat.userData.waterShader.uniforms.uWaterTime.value=waterTime;
-const forward=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),side=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);let dx=0,dz=0;const mag=Math.hypot(forward,side)||1;
+player.speed=keys.has('ShiftLeft')||keys.has('ShiftRight')?player.runSpeed:player.walkSpeed;const forward=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),side=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);let dx=0,dz=0;const mag=Math.hypot(forward,side)||1;
 if(forward||side){
  dx=(-Math.sin(player.yaw)*forward+Math.cos(player.yaw)*side)/mag;
  dz=(-Math.cos(player.yaw)*forward-Math.sin(player.yaw)*side)/mag;
